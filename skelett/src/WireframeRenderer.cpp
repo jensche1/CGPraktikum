@@ -1,6 +1,8 @@
 
 #include "WireframeRenderer.hpp"
 
+Image *mImage;
+Scene *mScene;
 /**
 ** Zeichnet alle Dreiecke der Scene als Wireframe-Rendering unter Verwendung des
 * Bresenham-Algorithmus
@@ -9,11 +11,17 @@
 **/
 
 void WireframeRenderer::renderScene(Color color) {
-    
+    // Durchlaufe alle Modelle
+    for (const auto& model : mScene->getModels()) {
+        // Jedes Modell besteht aus einer Liste von Dreiecken
+        for (const auto& triangle : model.mTriangles) {
+            // Verbinde die 3 Punkte des Dreiecks mit Linien
+            drawBresenhamLine(triangle.vertex[0], triangle.vertex[1], color);
+            drawBresenhamLine(triangle.vertex[1], triangle.vertex[2], color);
+            drawBresenhamLine(triangle.vertex[2], triangle.vertex[0], color);
+        }
+    }
 }
-
-    Image *mImage;
-    Scene *mScene;
 
 /**
 ** Zeichnet unter Verwendung des Bresenham Algorithmus eine Linie zwischen p1

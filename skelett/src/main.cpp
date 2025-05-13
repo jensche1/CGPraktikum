@@ -54,6 +54,9 @@ int main(int argc, char **argv) {
   /* Aufgabenblatt 2, Aufgabe 3: Setzen Sie die Transformationen der Modelle */
 
   /* Aufgabenblatt 2, Aufgabe 1: Rufen Sie Ihre renderScene-Methode hier auf */
+ 
+  wireRenderer.renderScene(Color(0.0, 0.0, 1.0));  // Zeichnet Szene in Blau
+
 
   
 
