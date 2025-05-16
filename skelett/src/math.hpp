@@ -54,3 +54,35 @@ inline double dotProduct(const GLVector &lhs, const GLVector &rhs) {
 inline int sgn(int x) { return (x > 0) ? 1 : (x < 0) ? -1 : 0; }
 
 /** Aufgabenblatt 2, Aufgabe 2 **/
+
+inline GLVector operator*(const GLMatrix &lhs, const GLVector &rhs) {
+  // Richtungsvektor: w = 0
+  return GLVector(
+      lhs(0, 0) * rhs(0) + lhs(0, 1) * rhs(1) + lhs(0, 2) * rhs(2),
+      lhs(1, 0) * rhs(0) + lhs(1, 1) * rhs(1) + lhs(1, 2) * rhs(2),
+      lhs(2, 0) * rhs(0) + lhs(2, 1) * rhs(1) + lhs(2, 2) * rhs(2)
+  );
+}
+
+inline GLPoint operator*(const GLMatrix &lhs, const GLPoint &rhs) {
+  // Ortsvektor: w = 1
+  double x = lhs(0, 0) * rhs(0) + lhs(0, 1) * rhs(1) + lhs(0, 2) * rhs(2) + lhs(0, 3);
+  double y = lhs(1, 0) * rhs(0) + lhs(1, 1) * rhs(1) + lhs(1, 2) * rhs(2) + lhs(1, 3);
+  double z = lhs(2, 0) * rhs(0) + lhs(2, 1) * rhs(1) + lhs(2, 2) * rhs(2) + lhs(2, 3);
+
+  return GLPoint(x, y, z);
+}
+
+inline GLMatrix operator*(const GLMatrix &lhs, const GLMatrix &rhs) {
+  GLMatrix result;
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      double sum = 0;
+      for (int k = 0; k < 4; ++k) {
+        sum += lhs(i, k) * rhs(k, j);
+      }
+      result.setValue(i, j, sum);
+    }
+  }
+  return result;
+}

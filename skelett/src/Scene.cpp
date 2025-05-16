@@ -96,7 +96,7 @@ void Scene::load(const std::vector<std::string> &pFiles) {
     // Immer das gleiche Material für das Model setzen
     Material material;
     material.color = Color(0.00, 1.00, 0.00);
-    model.setMaterial(material);
+    //model.setMaterial(material);
     // Jedes Model zum Vector der Models der Scene hinzufügen
     mModels.push_back(model);
   }

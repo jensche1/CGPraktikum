@@ -1,3 +1,3 @@
-/home/jean/Code/computergrafik/skelett/build/CMakeFiles/CGPraktikum.dir
-/home/jean/Code/computergrafik/skelett/build/CMakeFiles/edit_cache.dir
-/home/jean/Code/computergrafik/skelett/build/CMakeFiles/rebuild_cache.dir
+/home/vboxuser/CLionProjects/CGPraktikum/skelett/build/CMakeFiles/CGPraktikum.dir
+/home/vboxuser/CLionProjects/CGPraktikum/skelett/build/CMakeFiles/edit_cache.dir
+/home/vboxuser/CLionProjects/CGPraktikum/skelett/build/CMakeFiles/rebuild_cache.dir

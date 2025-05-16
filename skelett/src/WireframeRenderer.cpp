@@ -1,8 +1,29 @@
 
 #include "WireframeRenderer.hpp"
+#include "math.hpp"
+
 
 Image *mImage;
 Scene *mScene;
+
+void WireframeRenderer::renderScene(Color color) {
+    // Durchlaufe alle Modelle
+    for (const auto& model : mScene->getModels()) {
+        // Jedes Modell besteht aus einer Liste von Dreiecken
+        for (const auto& triangle : model.mTriangles) {
+            // Transformiere die Eckpunkte des Dreiecks
+            GLPoint v0_transformed = model.mTransform * triangle.vertex[0];
+            GLPoint v1_transformed = model.mTransform * triangle.vertex[1];
+            GLPoint v2_transformed = model.mTransform * triangle.vertex[2];
+
+            // Verbinde die transformierten Punkte mit Linien
+            drawBresenhamLine(v0_transformed, v1_transformed, color);
+            drawBresenhamLine(v1_transformed, v2_transformed, color);
+            drawBresenhamLine(v2_transformed, v2_transformed, color);
+        }
+    }
+}
+
 /**
 ** Zeichnet alle Dreiecke der Scene als Wireframe-Rendering unter Verwendung des
 * Bresenham-Algorithmus
@@ -10,18 +31,6 @@ Scene *mScene;
 ** (Aufgabenblatt 2 - Aufgabe 1)
 **/
 
-void WireframeRenderer::renderScene(Color color) {
-    // Durchlaufe alle Modelle
-    for (const auto& model : mScene->getModels()) {
-        // Jedes Modell besteht aus einer Liste von Dreiecken
-        for (const auto& triangle : model.mTriangles) {
-            // Verbinde die 3 Punkte des Dreiecks mit Linien
-            drawBresenhamLine(triangle.vertex[0], triangle.vertex[1], color);
-            drawBresenhamLine(triangle.vertex[1], triangle.vertex[2], color);
-            drawBresenhamLine(triangle.vertex[2], triangle.vertex[0], color);
-        }
-    }
-}
 
 /**
 ** Zeichnet unter Verwendung des Bresenham Algorithmus eine Linie zwischen p1

@@ -1,5 +1,4 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/CGPraktikum.dir/link.d"
   "CGPraktikum"
   "CGPraktikum.pdb"
   "CMakeFiles/CGPraktikum.dir/src/Camera.cpp.o"

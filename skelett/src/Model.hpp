@@ -6,31 +6,20 @@
 
 class Model {
  public:
-  Model();
+public:
+    std::vector<Triangle> mTriangles;
+    GLMatrix mTransform; // Transformationsmatrix
+    GLVector mRotation;
+    GLVector mTranslation;
+    GLVector mScale;
 
-  void setMaterial(Material material);
+    Model() : mRotation(0.0f, 0.0f, 0.0f), mTranslation(0.0f, 0.0f, 0.0f), mScale(1.0f, 1.0f, 1.0f) {
+        updateMatrix();
+    }
 
-  // Setter für die Transformationen
-  void setRotation(GLVector rotation);
-  void setTranslation(GLVector translation);
-  void setScale(GLVector scale);
+    void setRotation(const GLVector& rotation);
+    void setTranslation(const GLVector& translation);
+    void setScale(const GLVector& scale);
+    void updateMatrix();
 
-  // Die Dreiecke aus denen das Modell besteht
-  std::vector<Triangle> mTriangles;
-
-  // Das Material des Modells
-  Material getMaterial() const;
-
-  GLMatrix getTransformation() const;
-
- private:
-  // Aufgabenblatt 2, Aufgabe 2: Nutzen Sie diese Matrizen für die Transformationen
-  GLVector mRotation;
-  GLVector mTranslation;
-  GLVector mScale;
-
-  Material mMaterial;
-  // Die Transformationsmatrix des Modells
-  GLMatrix mMatrix;
-  void updateMatrix();
 };
