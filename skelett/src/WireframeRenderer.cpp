@@ -2,36 +2,27 @@
 #include "WireframeRenderer.hpp"
 #include "math.hpp"
 
-
-Image *mImage;
-Scene *mScene;
-
-void WireframeRenderer::renderScene(Color color) {
-    // Durchlaufe alle Modelle
-    for (const auto& model : mScene->getModels()) {
-        // Jedes Modell besteht aus einer Liste von Dreiecken
-        for (const auto& triangle : model.mTriangles) {
-            // Transformiere die Eckpunkte des Dreiecks
-            GLPoint v0_transformed = model.mTransform * triangle.vertex[0];
-            GLPoint v1_transformed = model.mTransform * triangle.vertex[1];
-            GLPoint v2_transformed = model.mTransform * triangle.vertex[2];
-
-            // Verbinde die transformierten Punkte mit Linien
-            drawBresenhamLine(v0_transformed, v1_transformed, color);
-            drawBresenhamLine(v1_transformed, v2_transformed, color);
-            drawBresenhamLine(v2_transformed, v2_transformed, color);
-        }
-    }
-}
-
 /**
 ** Zeichnet alle Dreiecke der Scene als Wireframe-Rendering unter Verwendung des
 * Bresenham-Algorithmus
 ** Precondition: Sowohl mImage als auch mScene müssen gesetzt sein.
 ** (Aufgabenblatt 2 - Aufgabe 1)
 **/
+Image *mImage;
+Scene *mScene;
 
-
+void WireframeRenderer::renderScene(Color color) {
+    for (const auto& model : mScene->getModels()) { // alle Modelle durchlaufen
+        for (const auto& triangle : model.mTriangles) { // Jedes Modell --> Liste von Dreiecken durchlaufen
+            GLPoint v0_transformed = model.mTransform * triangle.vertex[0]; // Transformieren der Eckpunkte der Dreiecke
+            GLPoint v1_transformed = model.mTransform * triangle.vertex[1];
+            GLPoint v2_transformed = model.mTransform * triangle.vertex[2];
+            drawBresenhamLine(v0_transformed, v1_transformed, color); // Verbinde die transformierten Punkte mit Linien
+            drawBresenhamLine(v1_transformed, v2_transformed, color);
+            drawBresenhamLine(v2_transformed, v0_transformed, color);
+        }
+    }
+}
 /**
 ** Zeichnet unter Verwendung des Bresenham Algorithmus eine Linie zwischen p1
 * und p2 (nutzt x & y Komponente - z Komponente wird ignoriert)
@@ -270,4 +261,3 @@ void WireframeRenderer::seedFillArea(GLPoint seed, Color borderColor, Color fill
         }
     }
 }
-

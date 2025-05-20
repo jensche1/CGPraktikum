@@ -52,8 +52,8 @@ int main(int argc, char **argv) {
   /* Aufgabenblatt 1, Aufgabe 3: Testen Sie Ihre seedFillArea-Methode hier */
 
   /* Aufgabenblatt 2, Aufgabe 3: Setzen Sie die Transformationen der Modelle */
-  // Zugriff auf die Modelle, um Transformationen anzuwenden
-  auto& models = scene->getModels();
+
+  auto& models = scene->getModels(); // Zugriff auf die Modelle, um Transformationen anzuwenden
   if (models.size() >= 2) {
       // Cube-Modell
       models[1].setTranslation(GLVector(150, 200, 0));

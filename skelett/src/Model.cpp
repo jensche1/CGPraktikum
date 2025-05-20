@@ -1,6 +1,6 @@
 #include "Model.hpp"
 
-void Model::setRotation(const GLVector& rotation) {
+void Model::setRotation(const GLVector& rotation) { 
     mRotation = rotation;
     updateMatrix();
 }
@@ -23,7 +23,7 @@ void Model::updateMatrix() {
     scaleMatrix.setValue(2, 2, mScale(2));
     scaleMatrix.setValue(3,3,1);
 
-    GLMatrix rotationXMatrix;
+    GLMatrix rotationXMatrix; // Rotation um x-Achse
     rotationXMatrix.setValue(0, 0, 1);
     rotationXMatrix.setValue(1, 1, cos(mRotation(0) * M_PI / 180.0));
     rotationXMatrix.setValue(1, 2, -sin(mRotation(0) * M_PI / 180.0));
@@ -31,7 +31,7 @@ void Model::updateMatrix() {
     rotationXMatrix.setValue(2, 2, cos(mRotation(0) * M_PI / 180.0));
     rotationXMatrix.setValue(3,3,1);
 
-    GLMatrix rotationYMatrix;
+    GLMatrix rotationYMatrix; // Rotation um y-Achse
     rotationYMatrix.setValue(0, 0, cos(mRotation(1) * M_PI / 180.0));
     rotationYMatrix.setValue(0, 2, sin(mRotation(1) * M_PI / 180.0));
     rotationYMatrix.setValue(1, 1, 1);
@@ -39,7 +39,7 @@ void Model::updateMatrix() {
     rotationYMatrix.setValue(2, 2, cos(mRotation(1) * M_PI / 180.0));
     rotationYMatrix.setValue(3,3,1);
 
-    GLMatrix rotationZMatrix;
+    GLMatrix rotationZMatrix; //Rotation um z-Achse
     rotationZMatrix.setValue(0, 0, cos(mRotation(2) * M_PI / 180.0));
     rotationZMatrix.setValue(0, 1, -sin(mRotation(2) * M_PI / 180.0));
     rotationZMatrix.setValue(1, 0, sin(mRotation(2) * M_PI / 180.0));
@@ -47,16 +47,16 @@ void Model::updateMatrix() {
     rotationZMatrix.setValue(2, 2, 1);
     rotationZMatrix.setValue(3,3,1);
 
-    GLMatrix translationMatrix;
+    GLMatrix translationMatrix; // Transformationsmatrix 
     translationMatrix.setValue(0, 0, 1);
-    translationMatrix.setValue(0, 3, mTranslation(0));
+    translationMatrix.setValue(0, 3, mTranslation(0)); // x
     translationMatrix.setValue(1, 1, 1);
-    translationMatrix.setValue(1, 3, mTranslation(1));
+    translationMatrix.setValue(1, 3, mTranslation(1)); // y
     translationMatrix.setValue(2, 2, 1);
-    translationMatrix.setValue(2, 3, mTranslation(2));
-    translationMatrix.setValue(3,3,1);
+    translationMatrix.setValue(2, 3, mTranslation(2)); // z
+    translationMatrix.setValue(3,3,1); 
 
 
-    // Kombiniere die Matrizen (Scale -> Rotate -> Translate)
+    // Kombiniere die Matrizen (Scale -> Rotate -> Translate) Gesamttransformation
     mTransform = translationMatrix * rotationZMatrix * rotationYMatrix * rotationXMatrix * scaleMatrix;
 }
