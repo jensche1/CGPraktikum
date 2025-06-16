@@ -38,7 +38,7 @@ public:
 
 private:
     GLMatrix mViewTransform;
-    GLMatrix mProjectionTransform;
+    GLMatrix mProjectionTransform;  // orthographic
     GLMatrix mWindowTransform;
 
     GLMatrix mInvViewTransform;

@@ -12,41 +12,33 @@
  ** Erstellt mittels Raycast das Rendering der mScene in das mImage
  ** Precondition: Sowohl mImage, mScene, mCamera müssen gesetzt sein.
  **/
-
 void SolidRenderer::renderRaycast() {
-    if (!mImage || !mScene || !mCamera) {
-        std::cerr << "Fehler: mImage, mScene oder mCamera ist nicht gesetzt." << std::endl;
-        return;
-    }
+  std::cout << "Rendern mittels Raycast gestartet." << std::endl;
 
-    
-    std::cout << "Rendern mittels Raycast gestartet." << std::endl;
+  // Ohne parallelisierung (wie in der Vorgabe):
+  for(size_t i = 0; i < mImage->getHeight(); ++i ) {
+      computeImageRow( i );
+  }
 
-    #pragma omp parallel for
-    for(size_t i = 0; i < mImage->getHeight(); ++i ) {
-        computeImageRow(i);
-    }
+  //  Parallelisierung mit OpenMP (auskommentiert, wie in der Vorgabe):
+  //#pragma omp parallel for
+  //    for(size_t i = 0; i < mImage->getHeight(); ++i )
+  //    {
+  //        computeImageRow( i );
+  //    }
 
-    std::cout << "Rendern mittels Raycast abgeschlossen." << std::endl;
+  std::cout << "Rendern mittels Raycast abgeschlossen." << std::endl;
 }
-
 
 /**
  * Aufgabenblatt 3: Hier wird das Raycasting implementiert. Siehe Aufgabenstellung!
  * Precondition: Sowohl mImage, mScene und mCamera  müssen gesetzt sein.
  */
 void SolidRenderer::computeImageRow(size_t rowNumber) {
-    if(!mImage || !mScene || !mCamera) {
-        std::cerr << "Fehler: mImage, mScene oder mCamera ist nicht gesetzt." << std::endl;
-        return;
-    }
-
     for (size_t x = 0; x < mImage->getWidth(); ++x) {
         Ray ray = mCamera->getRay(x, rowNumber);
         HitRecord hitRecord;
         hitRecord.recursions = 0; // Für Aufgabenblatt 4 wichtig, hier initial 0
-
-        hitRecord.parameter = std::numeric_limits<double>::max();
 
         // Überprüfen, ob der Strahl ein Objekt in der Szene trifft
         if (mScene->intersect(ray, hitRecord, EPSILON)) {
@@ -71,10 +63,4 @@ void SolidRenderer::shade(HitRecord &r) {
     // Die Farbinformation sollte bereits im HitRecord vorhanden sein, nachdem Scene::intersect aufgerufen wurde.
     // r.color ist bereits in Scene::intersect auf die Materialfarbe des getroffenen Objekts gesetzt worden.
     // Daher ist hier für Aufgabe 3 keine weitere Berechnung notwendig.
-    if(r.modelId > -1) {
-        r.color = mScene->getModels()[r.modelId].getMaterial().color;
-    }
-    if(r.sphereId > -1) {
-        r.color = mScene->getSpheres()[r.sphereId].getMaterial().color;
-    }
 }

@@ -62,8 +62,7 @@ void Model::updateMatrix() {
     // Multipliziere die Matrizen in der richtigen Reihenfolge: Skalierung, Rotation, Translation
     // M = T * R * S
     // Rotation ist XYZ
-    GLMatrix rotationMatrix = rotationZMatrix * rotationYMatrix * rotationXMatrix;
-    mTransform = translationMatrix * rotationMatrix * scaleMatrix;
+    mTransform = translationMatrix * (rotationXMatrix * (rotationYMatrix * (rotationZMatrix * scaleMatrix)));
 }
 
 void Model::setMaterial(Material material) {

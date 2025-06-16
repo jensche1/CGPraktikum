@@ -76,48 +76,73 @@ void Scene::load(const std::vector<std::string> &pFiles) {
  * Gibt zurück ob ein gegebener Strahl ein Objekt (Modell oder Kugel) der Szene trifft
  * (Aufgabenblatt 3)
  */
-bool Scene::intersect(const Ray &ray, HitRecord &hitRecord, const float epsilon) {
-  bool hit = false;
+bool Scene::intersect(const Ray &ray, HitRecord &hitRecord,
+                      const float epsilon) {
+    hitRecord.parameter = std::numeric_limits<double>::max(); // Initialisiere mit maximalem Wert
+    bool hit = false;
 
-  // Iteriere über alle Modelle (Dreiecke)
-  for (size_t modelIdx = 0; modelIdx < mModels.size(); ++modelIdx) {
-    Model& currentModel = mModels[modelIdx];
-    // Transformation des Strahls in den lokalen Koordinatenraum des Modells
-    // Ray_local.origin = M_inv * Ray_world.origin
-    // Ray_local.direction = M_inv * Ray_world.direction (w=0 für Vektor)
-    GLMatrix invTransform = currentModel.mTransform;
+    // Iteriere über alle Modelle (Dreiecke)
+    for (size_t modelIdx = 0; modelIdx < mModels.size(); ++modelIdx) {
+        Model& currentModel = mModels[modelIdx];
+        // Transformation des Strahls in den lokalen Koordinatenraum des Modells
+        // Ray_local.origin = M_inv * Ray_world.origin
+        // Ray_local.direction = M_inv * Ray_world.direction (w=0 für Vektor)
+        GLMatrix invTransform = currentModel.mTransform;
+        invTransform.inverse(); // Berechne die Inverse der Modell-Transformationsmatrix
 
-    for (size_t triIdx = 0; triIdx < currentModel.mTriangles.size(); ++triIdx) {
-      Triangle& currentTriangle = currentModel.mTriangles[triIdx];
+        Ray localRay;
+        localRay.origin = invTransform * ray.origin;
+        localRay.direction = invTransform * ray.direction; // Für Vektoren wird die translation ignoriert
+        localRay.direction.normalize(); // Normalisiere den transformierten Richtungsvektor
 
-      Triangle newTriangle;
+        for (size_t triIdx = 0; triIdx < currentModel.mTriangles.size(); ++triIdx) {
+            Triangle& currentTriangle = currentModel.mTriangles[triIdx];
+            HitRecord tempHitRecord; // Temporärer HitRecord für jeden Schnitttest
 
-      newTriangle.vertex[0] = invTransform * currentTriangle.vertex[0];
-      newTriangle.vertex[1] = invTransform * currentTriangle.vertex[1];
-      newTriangle.vertex[2] = invTransform * currentTriangle.vertex[2];
-      // Führe den Schnitttest im lokalen Raum durch
-      if (triangleIntersect(ray,newTriangle, hitRecord, epsilon)) {
-        hitRecord.modelId = modelIdx;
-        hitRecord.triangleId = triIdx;
-        hitRecord.sphereId = -1;
-        hit = true; 
-      }
+            // Führe den Schnitttest im lokalen Raum durch
+            if (triangleIntersect(localRay, currentTriangle, tempHitRecord, epsilon)) {
+                // Wenn ein Schnitt im lokalen Raum gefunden wurde, transformiere den Schnittpunkt und die Normale zurück
+                GLPoint worldIntersectionPoint = currentModel.mTransform * tempHitRecord.intersectionPoint;
+                GLVector worldNormal = currentModel.mTransform * tempHitRecord.normal;
+                worldNormal.normalize(); // Normale nach Transformation normalisieren
+
+                // Berechne den neuen Parameter im Weltkoordinatensystem
+                double dist = (worldIntersectionPoint - ray.origin).norm();
+                // Vergleiche mit dem bisher besten Treffer
+                if (dist < hitRecord.parameter) {
+                    hit = true;
+                    hitRecord.parameter = dist;
+                    hitRecord.intersectionPoint = worldIntersectionPoint;
+                    hitRecord.normal = worldNormal;
+                    hitRecord.triangleId = triIdx;
+                    hitRecord.modelId = modelIdx;
+                    hitRecord.sphereId = -1; // Kein Kugel-Treffer
+                    hitRecord.color = currentModel.getMaterial().color; // Materialfarbe vom Modell holen
+                }
+            }
+        }
     }
-  }
 
     // Iteriere über alle Kugeln
-  for (size_t sphereIdx = 0; sphereIdx < mSpheres.size(); ++sphereIdx) {
-    Sphere& currentSphere = mSpheres[sphereIdx];
+    for (size_t sphereIdx = 0; sphereIdx < mSpheres.size(); ++sphereIdx) {
+        Sphere& currentSphere = mSpheres[sphereIdx];
+        HitRecord tempHitRecord; // Temporärer HitRecord
 
-    if (sphereIntersect(ray, currentSphere, hitRecord, epsilon)) {
-    // Vergleiche mit dem bisher besten Treffer
-      hitRecord.modelId = -1;
-      hitRecord.triangleId = -1;
-      hitRecord.sphereId = sphereIdx;
-      hit = true;
+        if (sphereIntersect(ray, currentSphere, tempHitRecord, epsilon)) {
+            // Vergleiche mit dem bisher besten Treffer
+            if (tempHitRecord.parameter < hitRecord.parameter) {
+                hit = true;
+                hitRecord.parameter = tempHitRecord.parameter;
+                hitRecord.intersectionPoint = tempHitRecord.intersectionPoint;
+                hitRecord.normal = tempHitRecord.normal;
+                hitRecord.triangleId = -1; // Kein Dreiecks-Treffer
+                hitRecord.modelId = -1;   // Kein Modell-Treffer
+                hitRecord.sphereId = sphereIdx;
+                hitRecord.color = currentSphere.getMaterial().color; // Materialfarbe von der Kugel holen
+            }
+        }
     }
-  }
-  return hit;
+    return hit;
 }
 
 /** Aufgabenblatt 3: Gibt zurück ob ein gegebener Strahl ein Dreieck  eines Modells der Szene trifft
@@ -161,7 +186,7 @@ bool Scene::triangleIntersect(const Ray &ray, const Triangle &triangle,
     double t = dotProduct(edge2, qvec) * invDet;
 
     // Strahl trifft Dreieck
-    if (t > epsilon && t < hitRecord.parameter) { // t muss positiv sein (vor dem Ursprung des Strahls)
+    if (t > epsilon) { // t muss positiv sein (vor dem Ursprung des Strahls)
         hitRecord.parameter = t;
         hitRecord.intersectionPoint = ray.origin + ray.direction * t;
         hitRecord.normal = triangle.normal; // Normale des Dreiecks
@@ -198,7 +223,7 @@ bool Scene::sphereIntersect(const Ray &ray, const Sphere &sphere,
             t = t1;
         }
 
-        if (t > epsilon && t < hitRecord.parameter) {
+        if (t > epsilon) {
             hitRecord.parameter = t;
             hitRecord.intersectionPoint = ray.origin + ray.direction * t;
             hitRecord.normal = hitRecord.intersectionPoint - sphere.getPosition();

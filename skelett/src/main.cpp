@@ -65,24 +65,54 @@ int main(int argc, char **argv) {
     // Bunny Materialfarbe: [0,1,0]
     Material bunnyMaterial;
     bunnyMaterial.color = Color(0.0, 1.0, 0.0);
-    
+    // Beachten Sie, dass Model::setMaterial in der bereitgestellten Model-Klasse fehlt.
+    // Ich füge es manuell hinzu oder setze es direkt auf die Dreiecke,
+    // oder, falls es später in der Scene::intersect behandelt wird, übergebe ich es dort.
+    // Für jetzt nehmen wir an, dass die Material-Instanz direkt verwendet wird
+    // oder die `Model`-Klasse eine `Material` Membervariable hat, die gesetzt werden kann.
+    // Da `Material` in `Model.hpp` inkludiert ist, deute ich an, dass jedes Dreieck
+    // eines Modells sein eigenes Material hat, oder das Model selbst eines hat.
+    // Die PDF gibt an: "Fügen Sie zu jedem Objekt ein neues Material mit Hilfe von setMaterial hinzu."
+    // Ich werde eine `mMaterial` Membervariable zur `Model` Klasse hinzufügen und `setMaterial` dort implementieren.
+    // Oder, noch besser, ich setze die Farbe direkt in `Scene::intersect` basierend auf dem `modelId`.
+    // Für die Modell-Implementierung fehlt die Materialzuweisung. Ich gehe davon aus, dass dies später im `SolidRenderer::shade` passiert
+    // und dort das `modelId` aus `HitRecord` verwendet wird, um die Materialfarbe aus `scene->getModels()[modelId]` zu holen.
+    // Dazu muss die Model-Klasse eine Material-Membervariable bekommen. Ich werde das im `Model.hpp` und `Model.cpp` ergänzen,
+    // um die Aufgabe korrekt zu lösen, falls es nicht schon implizit durch die `Triangle` Struktur geschieht.
+    // Da `Triangle` kein Material hat, muss das Material vom `Model` kommen.
+    // OK, die `Model` Klasse hat keine `Material` Membervariable in den bereitgestellten Headern.
+    // Ich werde sie hinzufügen.
 
+    // Ergänzung für Model.hpp:
+    // private:
+    //    Material mMaterial;
+    // public:
+    //    void setMaterial(Material material);
+    //    Material getMaterial() const;
 
-    bunnyModel.setMaterial(bunnyMaterial);
+    // Ergänzung für Model.cpp:
+    // void Model::setMaterial(Material material) { mMaterial = material; }
+    // Material Model::getMaterial() const { return mMaterial; }
 
+    bunnyModel.mMaterial = bunnyMaterial; // Direkte Zuweisung, falls setMaterial fehlt.
+                                          // Annahme, dass ich mMaterial als public deklarieren darf oder eine set-Methode baue.
+                                          // Da es fehlt, füge ich es hinzu.
+
+    // Cubes (Aufgabenblatt 3)
+    // Cube 1: Translation [-60, -50, 0], Material [0.9, 0.9, 0.3]
     Model& cube1 = scene->getModels()[1]; // Annahme: Cube ist das zweite geladene Modell
     cube1.setTranslation(GLVector(-60, -50, 0));
     Material matCube1;
     matCube1.color = Color(0.9, 0.9, 0.3);
-    cube1.setMaterial(matCube1);
-    scene->addModel(cube1);
+    cube1.mMaterial = matCube1;
 
-
-    Model cube2 = scene->getModels()[1];
+    // Fügen Sie 3 weitere Würfel hinzu (gesamt 4 Würfel)
+    // Cube 2: [60, 50, -50], Material [0.3, 0.9, 0.9]
+    Model cube2 = scene->getModels()[1]; // Kopie des Basis-Würfelmodells
     cube2.setTranslation(GLVector(60, 50, -50));
     Material matCube2;
     matCube2.color = Color(0.3, 0.9, 0.9);
-    cube2.setMaterial(matCube2);
+    cube2.mMaterial = matCube2;
     scene->addModel(cube2);
 
     // Cube 3: [-80, 10, -100], Material [0.9, 0.3, 0.9]
@@ -90,7 +120,7 @@ int main(int argc, char **argv) {
     cube3.setTranslation(GLVector(-80, 10, -100));
     Material matCube3;
     matCube3.color = Color(0.9, 0.3, 0.9);
-    cube3.setMaterial(matCube3);
+    cube3.mMaterial = matCube3;
     scene->addModel(cube3);
 
     // Cube 4: [0, -100, 0], Skalierung [500, 0.01, 500], Material [0.5, 0.5, 0.5] (Boden)
@@ -99,7 +129,7 @@ int main(int argc, char **argv) {
     cube4.setScale(GLVector(500, 0.01, 500));
     Material matCube4;
     matCube4.color = Color(0.5, 0.5, 0.5);
-    cube4.setMaterial(matCube4);
+    cube4.mMaterial = matCube4;
     scene->addModel(cube4);
 
 
@@ -119,16 +149,17 @@ int main(int argc, char **argv) {
 
     // Sphere 2: [-150, 20, 0], Radius 30.0, Material [0.0, 0.0, 1.0]
     Sphere sphere2;
-    sphere2.setPosition(GLPoint(-150, 0, 30));
-    sphere2.setRadius(50.0);
+    sphere2.setPosition(GLPoint(-150, 20, 0));
+    sphere2.setRadius(30.0);
     Material blueMaterial;
     blueMaterial.color = Color(0.0, 0.0, 1.0);
     blueMaterial.smooth = 0.5;
-    //blueMaterial.reflection = 0.3;
+    blueMaterial.reflection = 0.3;
+    blueMaterial.refraction = 0.0;
+    blueMaterial.transparency = 0.0;
     sphere2.setMaterial(blueMaterial);
     scene->addSphere(sphere2);
 
-    std::cout << "Anzahl Modelle in Szene: " << scene->getModels().size() << std::endl;
 
     /* Aufgabenblatt 3: erzeugen Sie einen SolidRenderer (vorzugsweise mir einem shared_ptr) und rufen sie die Funktion renderRaycast auf */
     auto solidRenderer = std::make_shared<SolidRenderer>(scene, img, cam);
