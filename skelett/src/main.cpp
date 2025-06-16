@@ -65,50 +65,19 @@ int main(int argc, char **argv) {
     // Bunny Materialfarbe: [0,1,0]
     Material bunnyMaterial;
     bunnyMaterial.color = Color(0.0, 1.0, 0.0);
-    // Beachten Sie, dass Model::setMaterial in der bereitgestellten Model-Klasse fehlt.
-    // Ich füge es manuell hinzu oder setze es direkt auf die Dreiecke,
-    // oder, falls es später in der Scene::intersect behandelt wird, übergebe ich es dort.
-    // Für jetzt nehmen wir an, dass die Material-Instanz direkt verwendet wird
-    // oder die `Model`-Klasse eine `Material` Membervariable hat, die gesetzt werden kann.
-    // Da `Material` in `Model.hpp` inkludiert ist, deute ich an, dass jedes Dreieck
-    // eines Modells sein eigenes Material hat, oder das Model selbst eines hat.
-    // Die PDF gibt an: "Fügen Sie zu jedem Objekt ein neues Material mit Hilfe von setMaterial hinzu."
-    // Ich werde eine `mMaterial` Membervariable zur `Model` Klasse hinzufügen und `setMaterial` dort implementieren.
-    // Oder, noch besser, ich setze die Farbe direkt in `Scene::intersect` basierend auf dem `modelId`.
-    // Für die Modell-Implementierung fehlt die Materialzuweisung. Ich gehe davon aus, dass dies später im `SolidRenderer::shade` passiert
-    // und dort das `modelId` aus `HitRecord` verwendet wird, um die Materialfarbe aus `scene->getModels()[modelId]` zu holen.
-    // Dazu muss die Model-Klasse eine Material-Membervariable bekommen. Ich werde das im `Model.hpp` und `Model.cpp` ergänzen,
-    // um die Aufgabe korrekt zu lösen, falls es nicht schon implizit durch die `Triangle` Struktur geschieht.
-    // Da `Triangle` kein Material hat, muss das Material vom `Model` kommen.
-    // OK, die `Model` Klasse hat keine `Material` Membervariable in den bereitgestellten Headern.
-    // Ich werde sie hinzufügen.
+    /
 
-    // Ergänzung für Model.hpp:
-    // private:
-    //    Material mMaterial;
-    // public:
-    //    void setMaterial(Material material);
-    //    Material getMaterial() const;
 
-    // Ergänzung für Model.cpp:
-    // void Model::setMaterial(Material material) { mMaterial = material; }
-    // Material Model::getMaterial() const { return mMaterial; }
+    bunnyModel.mMaterial = bunnyMaterial;
 
-    bunnyModel.mMaterial = bunnyMaterial; // Direkte Zuweisung, falls setMaterial fehlt.
-                                          // Annahme, dass ich mMaterial als public deklarieren darf oder eine set-Methode baue.
-                                          // Da es fehlt, füge ich es hinzu.
-
-    // Cubes (Aufgabenblatt 3)
-    // Cube 1: Translation [-60, -50, 0], Material [0.9, 0.9, 0.3]
     Model& cube1 = scene->getModels()[1]; // Annahme: Cube ist das zweite geladene Modell
     cube1.setTranslation(GLVector(-60, -50, 0));
     Material matCube1;
     matCube1.color = Color(0.9, 0.9, 0.3);
     cube1.mMaterial = matCube1;
 
-    // Fügen Sie 3 weitere Würfel hinzu (gesamt 4 Würfel)
-    // Cube 2: [60, 50, -50], Material [0.3, 0.9, 0.9]
-    Model cube2 = scene->getModels()[1]; // Kopie des Basis-Würfelmodells
+
+    Model cube2 = scene->getModels()[1];
     cube2.setTranslation(GLVector(60, 50, -50));
     Material matCube2;
     matCube2.color = Color(0.3, 0.9, 0.9);
