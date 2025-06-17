@@ -1,6 +1,8 @@
+// Model.cpp Ergänzung
 #include "Model.hpp"
+#include <cmath> // Für M_PI
 
-void Model::setRotation(const GLVector& rotation) { 
+void Model::setRotation(const GLVector& rotation) {
     mRotation = rotation;
     updateMatrix();
 }
@@ -47,16 +49,27 @@ void Model::updateMatrix() {
     rotationZMatrix.setValue(2, 2, 1);
     rotationZMatrix.setValue(3,3,1);
 
-    GLMatrix translationMatrix; // Transformationsmatrix 
-    translationMatrix.setValue(0, 0, 1);
-    translationMatrix.setValue(0, 3, mTranslation(0)); // x
-    translationMatrix.setValue(1, 1, 1);
-    translationMatrix.setValue(1, 3, mTranslation(1)); // y
-    translationMatrix.setValue(2, 2, 1);
-    translationMatrix.setValue(2, 3, mTranslation(2)); // z
-    translationMatrix.setValue(3,3,1); 
+    GLMatrix translationMatrix; // Translationsmatrix
+    translationMatrix.setValue(0, 3, mTranslation(0));
+    translationMatrix.setValue(1, 3, mTranslation(1));
+    translationMatrix.setValue(2, 3, mTranslation(2));
+    translationMatrix.setValue(0,0,1);
+    translationMatrix.setValue(1,1,1);
+    translationMatrix.setValue(2,2,1);
+    translationMatrix.setValue(3,3,1);
 
 
-    // Kombiniere die Matrizen (Scale -> Rotate -> Translate) Gesamttransformation
-    mTransform = translationMatrix * rotationZMatrix * rotationYMatrix * rotationXMatrix * scaleMatrix;
+    // Multipliziere die Matrizen in der richtigen Reihenfolge: Skalierung, Rotation, Translation
+    // M = T * R * S
+    // Rotation ist XYZ
+    GLMatrix rotationMatrix = rotationZMatrix * rotationYMatrix * rotationXMatrix;
+    mTransform = translationMatrix * rotationMatrix * scaleMatrix;
+}
+
+void Model::setMaterial(Material material) {
+    mMaterial = material;
+}
+
+Material Model::getMaterial() const {
+    return mMaterial;
 }
