@@ -89,7 +89,7 @@ bool Scene::intersect(const Ray &ray, HitRecord &hitRecord,
     GLVector normal;
 
     for (size_t i = 0; i < getModels().size() ; i++) { // i= 0 ist bunny
-        for (Triangle triangle : getModels()[i].mTriangles) {
+        for (Triangle triangle : getModels()[i].mTriangles) {             //  Fehlersuche: hier war ein Fehler im Aufruf der Triangles
             GLMatrix transformation = getModels()[i].getTransformation();
             GLPoint p_1 = transformation*triangle.vertex[0];
             GLPoint p_2 = transformation*triangle.vertex[1];
@@ -120,7 +120,7 @@ bool Scene::intersect(const Ray &ray, HitRecord &hitRecord,
  * Diese Methode sollte in Scene::intersect für jedes Objektdreieck aufgerufen werden
  * Aufgabenblatt 4: Diese Methode befüllt den den HitRecord im Fall eines Treffers mit allen für das shading notwendigen informationen
  */
-bool Scene::triangleIntersect(const Ray &ray,  const Triangle &triangle,
+bool Scene::triangleIntersect(const Ray &ray,  const Triangle &triangle,            //Fehlersuche: Ray hat hier gefehlt, ursache?
                               HitRecord &hitRecord, const float epsilon) {
 
     GLPoint p1 = triangle.vertex[0];

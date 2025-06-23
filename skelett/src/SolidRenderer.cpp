@@ -30,7 +30,7 @@ void SolidRenderer::renderRaycast() {
  * Precondition: Sowohl mImage, mScene und mCamera  müssen gesetzt sein.
  */
 void SolidRenderer::computeImageRow(size_t rowNumber) {
-    for (size_t spalte = 0; spalte < mImage->getWidth(); ++spalte) {
+    for (size_t spalte = 0; spalte < mImage->getWidth(); ++spalte) {   //Fehlersuche: Noch einmal neu, falls hier möglicher Fehler.
         Ray ray = mCamera->getRay(spalte, rowNumber);
         HitRecord hit;
         hit.color = Color (0,0,0);

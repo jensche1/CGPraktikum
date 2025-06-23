@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
     sphere2.setRadius(50);
     sphere2.setPosition(GLPoint(150, 0.0, -30));
 
-    /* Aufgabenblatt 3: (Wenn nötig) Transformationen der Modelle im World space, sodass sie von der Kamera gesehen werden könnnen. Die nötigen Transformationen für eine Darstellung entsprechend der Beispiellösung ist in der Aufgabenstellung gegeben. */
+    /* Problemsuche: Modelle noch einmal neu geladen, jetzt sind Würfel aufgetaucht */
     Model &cube1 = scene->getModels()[1];
     cube1.setTranslation(GLVector(-60, -50, 0));
     cube1.setScale(GLVector(1, 1, 1));
