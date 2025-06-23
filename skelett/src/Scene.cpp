@@ -1,5 +1,3 @@
-// Scene.cpp Implementierung
-
 #include "Scene.hpp"
 
 #include <assimp/postprocess.h>
@@ -10,66 +8,73 @@
 #include <cstddef>
 #include <iostream>
 #include <vector>
-#include <limits> // Für std::numeric_limits
+#include <limits> /
 
-Scene::Scene() {}
+Scene::Scene() {
+}
 
 /**
  * Lädt 3D-Modelle aus den angegebenen Dateien und fügt sie der Szene hinzu.
  * (Aufgabenblatt 1, Aufgabe 1)
  */
 void Scene::load(const std::vector<std::string> &pFiles) {
-  std::cout << "Laden der PLY Dateien gestartet." << std::endl;
+    std::cout << "Laden der PLY Dateien:" << std::endl;
+    // Für alle Objekte (Objekt meint hier das selbe wie Model)
+    for (int obj_nr = 0; obj_nr < pFiles.size(); obj_nr++) {
+        std::cout << "\tModel-Index: " << obj_nr << std::endl;
+        // Assimp übernimmt das Einlesen der ply-Dateien
+        Assimp::Importer importer;
+        const aiScene *assimpScene = importer.ReadFile(
+                pFiles[obj_nr], aiProcess_CalcTangentSpace | aiProcess_Triangulate |
+                                aiProcess_JoinIdenticalVertices |
+                                aiProcess_SortByPType);
 
-  Assimp::Importer importer;
-  for (const std::string &path : pFiles) {
-    const aiScene *aiscene =
-        importer.ReadFile(path, aiProcess_JoinIdenticalVertices |
-                                    aiProcess_Triangulate |
-                                    aiProcess_CalcTangentSpace);
+        if (!assimpScene) {
+            std::cout << importer.GetErrorString() << std::endl;
+        }
+        assert(assimpScene);
+        auto meshes = assimpScene->mMeshes;
+        // Neues Model erstellen
+        Model model = Model();
 
-    if (!aiscene || aiscene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
-        !aiscene->mRootNode) {
-      std::cerr << "Assimp-Fehler beim Laden von " << path << ": "
-                << importer.GetErrorString() << std::endl;
-      continue;
+        // Für alle Meshes des Models
+        for (int i = 0; i < assimpScene->mNumMeshes; i++) {
+            std::cout << "\t\tMesh-Index: " << i << " (" << meshes[i]->mNumFaces
+                      << " Faces)" << std::endl;
+            auto faces = meshes[i]->mFaces;
+            auto vertices = meshes[i]->mVertices;
+
+            // Für alle Faces einzelner Meshes
+            for (int j = 0; j < meshes[i]->mNumFaces; j++) {
+                // Dreieck konstruieren und nötige Werte berechnen
+                Triangle tri;
+                assert(faces[j].mNumIndices == 3);
+                tri.vertex[0] = GLPoint(vertices[faces[j].mIndices[0]].x,
+                                        vertices[faces[j].mIndices[0]].y,
+                                        vertices[faces[j].mIndices[0]].z);
+                tri.vertex[1] = GLPoint(vertices[faces[j].mIndices[1]].x,
+                                        vertices[faces[j].mIndices[1]].y,
+                                        vertices[faces[j].mIndices[1]].z);
+                tri.vertex[2] = GLPoint(vertices[faces[j].mIndices[2]].x,
+                                        vertices[faces[j].mIndices[2]].y,
+                                        vertices[faces[j].mIndices[2]].z);
+                GLVector normal = crossProduct(tri.vertex[1] - tri.vertex[0],
+                                               tri.vertex[2] - tri.vertex[0]);
+                normal.normalize();
+                tri.normal = normal;
+                // Jedes Dreieck zum Vector der Dreiecke des aktuellen Models hinzufügen
+                model.mTriangles.push_back(tri);
+            }
+        }
+        // Immer das gleiche Material für das Model setzen
+        Material material;
+        material.color = Color(0.00, 1.00, 0.00);
+        model.setMaterial(material);
+        // Jedes Model zum Vector der Models der Scene hinzufügen
+        mModels.push_back(model);
     }
 
-    Model model; // Erstelle ein neues Model-Objekt für jedes geladene Modell
-
-    for (size_t i = 0; i < aiscene->mNumMeshes; ++i) {
-      aiMesh *mesh = aiscene->mMeshes[i];
-
-      // Kopiere die Vertices
-      std::vector<GLPoint> vertices;
-      for (size_t j = 0; j < mesh->mNumVertices; ++j) {
-        vertices.emplace_back(mesh->mVertices[j].x, mesh->mVertices[j].y,
-                              mesh->mVertices[j].z);
-      }
-
-      // Kopiere die Faces (Dreiecke)
-      for (size_t j = 0; j < mesh->mNumFaces; ++j) {
-        aiFace &face = mesh->mFaces[j];
-        assert(face.mNumIndices == 3); // Stellen Sie sicher, dass es ein Dreieck ist
-
-        Triangle tri;
-          tri.vertex[0] = GLPoint(vertices[face.mIndices[0]](0), vertices[face.mIndices[0]](1), vertices[face.mIndices[0]](2));
-          tri.vertex[1] = GLPoint(vertices[face.mIndices[1]](0), vertices[face.mIndices[1]](1), vertices[face.mIndices[1]](2));
-          tri.vertex[2] = GLPoint(vertices[face.mIndices[2]](0), vertices[face.mIndices[2]](1), vertices[face.mIndices[2]](2));
-
-        GLVector normal = crossProduct(tri.vertex[1] - tri.vertex[0],
-                                       tri.vertex[2] - tri.vertex[0]);
-        normal.normalize();
-        tri.normal = normal;
-        // Jedes Dreieck zum Vector der Dreiecke des aktuellen Models hinzufügen
-        model.mTriangles.push_back(tri);
-      }
-    }
-    // Jedes Model zum Vector der Models der Scene hinzufügen
-    mModels.push_back(model);
-  }
-
-  std::cout << "Laden der PLY Dateien abgeschlossen." << std::endl;
+    std::cout << "Laden der PLY Dateien abgeschlossen." << std::endl;
 }
 
 /**
@@ -78,123 +83,91 @@ void Scene::load(const std::vector<std::string> &pFiles) {
  */
 bool Scene::intersect(const Ray &ray, HitRecord &hitRecord,
                       const float epsilon) {
-    hitRecord.parameter = std::numeric_limits<double>::max(); // Initialisiere mit maximalem Wert
-    bool hit = false;
+     // Initialisiere mit maximalem Wert
+    bool hit_Anything = false;
+    double t;
+    GLVector normal;
 
-    // Iteriere über alle Modelle (Dreiecke)
-    for (size_t modelIdx = 0; modelIdx < mModels.size(); ++modelIdx) {
-        Model& currentModel = mModels[modelIdx];
-        // Transformation des Strahls in den lokalen Koordinatenraum des Modells
-        // Ray_local.origin = M_inv * Ray_world.origin
-        // Ray_local.direction = M_inv * Ray_world.direction (w=0 für Vektor)
-        GLMatrix invTransform = currentModel.mTransform;
-        invTransform.inverse(); // Berechne die Inverse der Modell-Transformationsmatrix
-
-        Ray localRay;
-        localRay.origin = invTransform * ray.origin;
-        localRay.direction = invTransform * ray.direction; // Für Vektoren wird die translation ignoriert
-        localRay.direction.normalize(); // Normalisiere den transformierten Richtungsvektor
-
-        for (size_t triIdx = 0; triIdx < currentModel.mTriangles.size(); ++triIdx) {
-            Triangle& currentTriangle = currentModel.mTriangles[triIdx];
-            HitRecord tempHitRecord; // Temporärer HitRecord für jeden Schnitttest
-
-            // Führe den Schnitttest im lokalen Raum durch
-            if (triangleIntersect(localRay, currentTriangle, tempHitRecord, epsilon)) {
-                // Wenn ein Schnitt im lokalen Raum gefunden wurde, transformiere den Schnittpunkt und die Normale zurück
-                GLPoint worldIntersectionPoint = currentModel.mTransform * tempHitRecord.intersectionPoint;
-                GLVector worldNormal = currentModel.mTransform * tempHitRecord.normal;
-                worldNormal.normalize(); // Normale nach Transformation normalisieren
-
-                // Berechne den neuen Parameter im Weltkoordinatensystem
-                double dist = (worldIntersectionPoint - ray.origin).norm();
-                // Vergleiche mit dem bisher besten Treffer
-                if (dist < hitRecord.parameter) {
-                    hit = true;
-                    hitRecord.parameter = dist;
-                    hitRecord.intersectionPoint = worldIntersectionPoint;
-                    hitRecord.normal = worldNormal;
-                    hitRecord.triangleId = triIdx;
-                    hitRecord.modelId = modelIdx;
-                    hitRecord.sphereId = -1; // Kein Kugel-Treffer
-                    hitRecord.color = currentModel.getMaterial().color; // Materialfarbe vom Modell holen
-                }
+    for (size_t i = 0; i < getModels().size() ; i++) { // i= 0 ist bunny
+        for (Triangle triangle : getModels()[i].mTriangles) {
+            GLMatrix transformation = getModels()[i].getTransformation();
+            GLPoint p_1 = transformation*triangle.vertex[0];
+            GLPoint p_2 = transformation*triangle.vertex[1];
+            GLPoint p_3 = transformation*triangle.vertex[2];
+            Triangle transformiertes_triangle;
+            transformiertes_triangle.vertex[0] =p_1;
+            transformiertes_triangle.vertex[1] =p_2;
+            transformiertes_triangle.vertex[2] =p_3;
+            if (triangleIntersect(ray,transformiertes_triangle,hitRecord,epsilon)) {
+                hitRecord.modelId = i;
+                //hitRecord.color = getModels()[i].getMaterial().color;
+                hit_Anything = true;
             }
         }
     }
 
-    // Iteriere über alle Kugeln
-    for (size_t sphereIdx = 0; sphereIdx < mSpheres.size(); ++sphereIdx) {
-        Sphere& currentSphere = mSpheres[sphereIdx];
-        HitRecord tempHitRecord; // Temporärer HitRecord
-
-        if (sphereIntersect(ray, currentSphere, tempHitRecord, epsilon)) {
-            // Vergleiche mit dem bisher besten Treffer
-            if (tempHitRecord.parameter < hitRecord.parameter) {
-                hit = true;
-                hitRecord.parameter = tempHitRecord.parameter;
-                hitRecord.intersectionPoint = tempHitRecord.intersectionPoint;
-                hitRecord.normal = tempHitRecord.normal;
-                hitRecord.triangleId = -1; // Kein Dreiecks-Treffer
-                hitRecord.modelId = -1;   // Kein Modell-Treffer
-                hitRecord.sphereId = sphereIdx;
-                hitRecord.color = currentSphere.getMaterial().color; // Materialfarbe von der Kugel holen
-            }
+    for (size_t i = 0; i < getSpheres().size(); i++) {
+        if (sphereIntersect(ray, getSpheres()[i], hitRecord, epsilon)) {
+            hitRecord.sphereId = i;
+            //hitRecord.color = getSpheres()[i].getMaterial().color;
+            hit_Anything = true;
         }
     }
-    return hit;
+    return hit_Anything;
 }
 
 /** Aufgabenblatt 3: Gibt zurück ob ein gegebener Strahl ein Dreieck  eines Modells der Szene trifft
  * Diese Methode sollte in Scene::intersect für jedes Objektdreieck aufgerufen werden
  * Aufgabenblatt 4: Diese Methode befüllt den den HitRecord im Fall eines Treffers mit allen für das shading notwendigen informationen
  */
-bool Scene::triangleIntersect(const Ray &ray, const Triangle &triangle,
+bool Scene::triangleIntersect(const Ray &ray,  const Triangle &triangle,
                               HitRecord &hitRecord, const float epsilon) {
-    // Möller-Trumbore Algorithmus
-    const GLPoint& v0 = triangle.vertex[0];
-    const GLPoint& v1 = triangle.vertex[1];
-    const GLPoint& v2 = triangle.vertex[2];
 
-    GLVector edge1 = v1 - v0;
-    GLVector edge2 = v2 - v0;
+    GLPoint p1 = triangle.vertex[0];
+    GLPoint p2 = triangle.vertex[1];
+    GLPoint p3 = triangle.vertex[2];
 
-    GLVector pvec = crossProduct(ray.direction, edge2);
-    double det = dotProduct(edge1, pvec);
+
+
+    GLVector n = crossProduct(p2 - p1, p3 - p1);
+
 
     // Wenn die Determinante nahe Null ist, ist der Strahl parallel zur Ebene des Dreiecks
-    if (std::abs(det) < epsilon) {
+    if (dotProduct (n, ray.direction) < epsilon && dotProduct( n, ray.direction) > (-1 * epsilon)){
         return false;
     }
 
-    double invDet = 1.0 / det;
+    double t = dotProduct(p1 - ray.origin, n) / dotProduct(ray.direction, n);
 
-    GLVector tvec = ray.origin - v0;
-    double u = dotProduct(tvec, pvec) * invDet;
-
-    if (u < 0.0 || u > 1.0) {
+    //culling hier
+    if (hitRecord.parameter < t || t < epsilon) {
         return false;
     }
 
-    GLVector qvec = crossProduct(ray.direction, edge1);
-    double v = dotProduct(tvec, qvec) * invDet;
 
-    if (v < 0.0 || u + v > 1.0) {
+    GLPoint p = ray.origin + t * ray.direction;
+
+    double flaecheABC = dotProduct(n, n);
+
+    double alpha = dotProduct(crossProduct(p2 - p, p3 - p), n) / flaecheABC;
+    if (alpha < 0 || alpha > 1) {
         return false;
     }
 
-    double t = dotProduct(edge2, qvec) * invDet;
-
-    // Strahl trifft Dreieck
-    if (t > epsilon) { // t muss positiv sein (vor dem Ursprung des Strahls)
-        hitRecord.parameter = t;
-        hitRecord.intersectionPoint = ray.origin + ray.direction * t;
-        hitRecord.normal = triangle.normal; // Normale des Dreiecks
-        hitRecord.rayDirection = ray.direction;
-        return true;
+    double beta = dotProduct(crossProduct(p - p1, p3 - p1), n) / flaecheABC;
+    if (beta < 0 || beta > 1) {
+        return false;
+    }
+    double gamma = 1 - alpha - beta;
+    if (gamma < 0) {
+        return false;
     }
 
-    return false;
+
+
+    hitRecord.parameter = t;
+    hitRecord.intersectionPoint = p;
+    return true;
 }
 
 /** Aufgabenblatt 3: Gibt zurück ob ein gegebener Strahl eine Kugel der Szene trifft
@@ -203,35 +176,42 @@ bool Scene::triangleIntersect(const Ray &ray, const Triangle &triangle,
 */
 bool Scene::sphereIntersect(const Ray &ray, const Sphere &sphere,
                             HitRecord &hitRecord, const float epsilon) {
-    GLVector oc = ray.origin - sphere.getPosition();
-    double a = dotProduct(ray.direction, ray.direction);
-    double b = 2.0 * dotProduct(oc, ray.direction);
-    double c = dotProduct(oc, oc) - sphere.getRadius() * sphere.getRadius();
+    GLPoint e = ray.origin;
+    GLVector v = ray.direction;
+    GLPoint m = sphere.getPosition();
+    double r = sphere.getRadius();
 
-    double discriminant = b * b - 4 * a * c;
+    double a = dotProduct(v,v);
+    double b = 2 * dotProduct(v,e-m);
+    double c = dotProduct(e - m,e - m) - r*r;
 
-    if (discriminant < 0) {
-        return false; // Kein Schnitt
-    } else {
-        double t0 = (-b - std::sqrt(discriminant)) / (2.0 * a);
-        double t1 = (-b + std::sqrt(discriminant)) / (2.0 * a);
+    double diskr = b*b - 4*a*c;
 
-        double t = -1.0;
-        if (t0 > epsilon) { // Prüfe den ersten Schnittpunkt
-            t = t0;
-        } else if (t1 > epsilon) { // Prüfe den zweiten Schnittpunkt, falls t0 negativ ist (Kamera in Kugel)
-            t = t1;
-        }
+    if (diskr < 0) {
+        return false;
+    }
 
-        if (t > epsilon) {
+    double t = (-b - sqrt(diskr)) / (2*a);
+
+    //mit Parameter aus hitrecord abgleichen
+    if (hitRecord.parameter > t) {
+        if(t > epsilon) {
             hitRecord.parameter = t;
-            hitRecord.intersectionPoint = ray.origin + ray.direction * t;
-            hitRecord.normal = hitRecord.intersectionPoint - sphere.getPosition();
-            hitRecord.normal.normalize();
-            hitRecord.rayDirection = ray.direction;
+            hitRecord.intersectionPoint = ray.origin + t * ray.direction;
             return true;
         }
     }
+
+    t = (-b + sqrt(diskr)) / (2*a);
+    //mit Parameter aus hitrecord abgleichen
+    if (hitRecord.parameter > t) {
+        if(t > epsilon) {
+            hitRecord.parameter = t;
+            hitRecord.intersectionPoint = ray.origin + t * ray.direction;
+            return true;
+        }
+    }
+
     return false;
 }
 

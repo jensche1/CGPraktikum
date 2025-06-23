@@ -1,30 +1,36 @@
-// Model.hpp Ergänzung
 #pragma once
 
-#include <vector> // Sicherstellen, dass vector enthalten ist
 #include "Material.hpp"
 #include "math.hpp"
 #include "structs.hpp"
 
 class Model {
 public:
+    Model();
+
+    void setMaterial(Material material);
+
+    // Setter für die Transformationen
+    void setRotation(GLVector rotation);
+    void setTranslation(GLVector translation);
+    void setScale(GLVector scale);
+
+    // Die Dreiecke aus denen das Modell besteht
     std::vector<Triangle> mTriangles;
-    GLMatrix mTransform; // Transformationsmatrix
+
+    // Das Material des Modells
+    Material getMaterial() const;
+
+    GLMatrix getTransformation() const;
+
+private:
+    // Aufgabenblatt 2, Aufgabe 2: Nutzen Sie diese Matrizen für die Transformationen
     GLVector mRotation;
     GLVector mTranslation;
     GLVector mScale;
-    Material mMaterial; // Hinzugefügte Material-Membervariable
 
-    Model() : mRotation(0.0f, 0.0f, 0.0f), mTranslation(0.0f, 0.0f, 0.0f), mScale(1.0f, 1.0f, 1.0f) {
-        updateMatrix();
-    }
-
-    void setRotation(const GLVector& rotation);
-    void setTranslation(const GLVector& translation);
-    void setScale(const GLVector& scale);
+    Material mMaterial;
+    // Die Transformationsmatrix des Modells
+    GLMatrix mMatrix;
     void updateMatrix();
-
-    // Hinzugefügte Setter/Getter für Material
-    void setMaterial(Material material);
-    Material getMaterial() const;
 };

@@ -1,74 +1,105 @@
-// Model.cpp Ergänzung
 #include "Model.hpp"
-#include <cmath> // Für M_PI
 
-void Model::setRotation(const GLVector& rotation) {
-    mRotation = rotation;
+// Konstruktor
+Model::Model()
+{
+    /* Aufgabenblatt 2, Aufgabe 3: Setzen Sie die default Werte */
+    GLVector mRotation;
+    GLVector mTranslation;
+    GLVector mScale;
+    GLMatrix mMatrix;
+}
+
+// Setter für das Material
+void Model::setMaterial(Material material)
+{
+    mMaterial = Material();
+    mMaterial.smooth = material.smooth;
+    mMaterial.reflection = material.reflection;
+    mMaterial.refraction = material.refraction;
+    mMaterial.transparency = material.transparency;
+    mMaterial.color = Color(material.color.r, material.color.g, material.color.b);
+}
+
+/* Aufgabenblatt 2, Aufgabe 3: Implementieren Sie die vier Methoden für die Transformationen hier */
+void Model::setRotation(GLVector rotation)
+{
+    //Winkel Phi für die jeweillige Rotation um eine Achse von Grad in Bogenmaß umrechnen
+    mRotation(0) = rotation(0) * 2 * 3.1415 / 360;
+    mRotation(1) = rotation(1) * 2 * 3.1415 / 360;
+    mRotation(2) = rotation(2) * 2 * 3.1415 / 360;
+
     updateMatrix();
 }
 
-void Model::setTranslation(const GLVector& translation) {
-    mTranslation = translation;
+void Model::setScale(GLVector scale)
+{
+    for (int i = 0; i < 3; i++)
+    {
+        mScale(i) = scale(i);
+    }
     updateMatrix();
 }
 
-void Model::setScale(const GLVector& scale) {
-    mScale = scale;
+
+void Model::setTranslation(GLVector translation)
+{
+    for (int i = 0; i < 3; i++)
+    {
+        mTranslation(i) = translation(i);
+    }
     updateMatrix();
 }
 
-void Model::updateMatrix() {
-    // Erstelle die Transformationsmatrizen
-    GLMatrix scaleMatrix;
-    scaleMatrix.setValue(0, 0, mScale(0));
-    scaleMatrix.setValue(1, 1, mScale(1));
-    scaleMatrix.setValue(2, 2, mScale(2));
-    scaleMatrix.setValue(3,3,1);
+void Model::updateMatrix()
+{
+    //Rotations Matrizen
+    GLMatrix rxMatrix;
+    GLMatrix ryMatrix;
+    GLMatrix rzMatrix;
 
-    GLMatrix rotationXMatrix; // Rotation um x-Achse
-    rotationXMatrix.setValue(0, 0, 1);
-    rotationXMatrix.setValue(1, 1, cos(mRotation(0) * M_PI / 180.0));
-    rotationXMatrix.setValue(1, 2, -sin(mRotation(0) * M_PI / 180.0));
-    rotationXMatrix.setValue(2, 1, sin(mRotation(0) * M_PI / 180.0));
-    rotationXMatrix.setValue(2, 2, cos(mRotation(0) * M_PI / 180.0));
-    rotationXMatrix.setValue(3,3,1);
+    //Vector in Matrix zum berechnen
+    GLMatrix sMatrix;
+    for (int i = 0; i < 3; i++)
+    {
+        sMatrix.setValue(i, i, mScale(i));
+    }
+    //Vector in Matrix zum berechnen
+    GLMatrix rMatrix;
 
-    GLMatrix rotationYMatrix; // Rotation um y-Achse
-    rotationYMatrix.setValue(0, 0, cos(mRotation(1) * M_PI / 180.0));
-    rotationYMatrix.setValue(0, 2, sin(mRotation(1) * M_PI / 180.0));
-    rotationYMatrix.setValue(1, 1, 1);
-    rotationYMatrix.setValue(2, 0, -sin(mRotation(1) * M_PI / 180.0));
-    rotationYMatrix.setValue(2, 2, cos(mRotation(1) * M_PI / 180.0));
-    rotationYMatrix.setValue(3,3,1);
+    //Rotationsmatrix für Drehung um x-Achse
+    rxMatrix.setValue(1, 1, cos(mRotation(0)));
+    rxMatrix.setValue(1, 2, -sin(mRotation(0)));
+    rxMatrix.setValue(2, 1, sin(mRotation(0)));
+    rxMatrix.setValue(2, 2, cos(mRotation(0)));
 
-    GLMatrix rotationZMatrix; //Rotation um z-Achse
-    rotationZMatrix.setValue(0, 0, cos(mRotation(2) * M_PI / 180.0));
-    rotationZMatrix.setValue(0, 1, -sin(mRotation(2) * M_PI / 180.0));
-    rotationZMatrix.setValue(1, 0, sin(mRotation(2) * M_PI / 180.0));
-    rotationZMatrix.setValue(1, 1, cos(mRotation(2) * M_PI / 180.0));
-    rotationZMatrix.setValue(2, 2, 1);
-    rotationZMatrix.setValue(3,3,1);
+    //Rotationsmatrix für Drehung um y-Achse
+    ryMatrix.setValue(0, 0, cos(mRotation(1)));
+    ryMatrix.setValue(0, 2, sin(mRotation(1)));
+    ryMatrix.setValue(2, 0, -sin(mRotation(1)));
+    ryMatrix.setValue(2, 2, cos(mRotation(1)));
 
-    GLMatrix translationMatrix; // Translationsmatrix
-    translationMatrix.setValue(0, 3, mTranslation(0));
-    translationMatrix.setValue(1, 3, mTranslation(1));
-    translationMatrix.setValue(2, 3, mTranslation(2));
-    translationMatrix.setValue(0,0,1);
-    translationMatrix.setValue(1,1,1);
-    translationMatrix.setValue(2,2,1);
-    translationMatrix.setValue(3,3,1);
+    //Rotationsmatrix für Drehung um z-Achse
+    rzMatrix.setValue(0, 0, cos(mRotation(2)));
+    rzMatrix.setValue(0, 1, -sin(mRotation(2)));
+    rzMatrix.setValue(1, 0, sin(mRotation(2)));
+    rzMatrix.setValue(1, 1, cos(mRotation(2)));
 
+    //Rotationsvector berechnen
+    rMatrix = rxMatrix * ryMatrix * rzMatrix;
 
-    // Multipliziere die Matrizen in der richtigen Reihenfolge: Skalierung, Rotation, Translation
-    // M = T * R * S
-    // Rotation ist XYZ
-    mTransform = translationMatrix * (rotationXMatrix * (rotationYMatrix * (rotationZMatrix * scaleMatrix)));
+    //Vector in Matrix zum berechnen
+    GLMatrix tMatrix;
+    for (int i = 0; i < 3; i++)
+    {
+        tMatrix.setValue(i, 3, mTranslation(i));
+    }
+
+    //skalierte Matrix des Models
+    mMatrix = tMatrix * rMatrix * sMatrix;
+    //std::cout<< mMatrix << "\n" << mTranslation << "\n\n";
 }
 
-void Model::setMaterial(Material material) {
-    mMaterial = material;
-}
+GLMatrix Model::getTransformation() const { return mMatrix; }
 
-Material Model::getMaterial() const {
-    return mMaterial;
-}
+Material Model::getMaterial() const { return mMaterial; }

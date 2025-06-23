@@ -15,7 +15,7 @@ public:
 
     void setColumn(int i, const GLVector &rhs);
 
-    void setValue(const int row, const int column, const double value);
+    void setValue(const int row, const int column, const float value);
 
     GLVector getColumn(int i) const;
 

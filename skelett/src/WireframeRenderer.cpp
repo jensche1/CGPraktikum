@@ -10,7 +10,7 @@
 **/
 Image *mImage;
 Scene *mScene;
-
+/**
 void WireframeRenderer::renderScene(Color color) {
     for (const auto& model : mScene->getModels()) { // alle Modelle durchlaufen
         for (const auto& triangle : model.mTriangles) { // Jedes Modell --> Liste von Dreiecken durchlaufen
@@ -34,7 +34,7 @@ void WireframeRenderer::drawBresenhamLine(GLPoint p1, GLPoint p2, Color color)
     if (mImage != nullptr){
         int dx = int(p2.operator()(0) - p1.operator()(0));
         int dy = int(p2.operator()(1) - p1.operator()(1));
-        
+
         if(dx >= 0){
             //1, 2, 7, 8 oktant
             if (dy >= 0){
@@ -72,11 +72,11 @@ void WireframeRenderer::drawBresenham1(GLPoint p1, GLPoint p2, Color color){
     dx = int(p2.operator()(0)) - x;
     dy = int(p2.operator()(1)) - y;
     e = dy + dy - dx;
-    
+
     for (;x <= p2.operator()(0); x++){
         mImage->setValue(x, y, color);
         if (e > 0){
-            y++; 
+            y++;
             e -= dx + dx;
         }
         e += dy + dy;
@@ -90,11 +90,11 @@ void WireframeRenderer::drawBresenham2(GLPoint p1, GLPoint p2, Color color){
     dx = int(p2.operator()(0)) - x;
     dy = int(p2.operator()(1)) - y;
     e = dx + dx - dy;
-    
+
     for (;y <= p2.operator()(1); y++){
         mImage->setValue(x, y, color);
         if (e > 0){
-            x++; 
+            x++;
             e -= dy + dy;
         }
         e += dx + dx;
@@ -108,11 +108,11 @@ void WireframeRenderer::drawBresenham3(GLPoint p1, GLPoint p2, Color color){
     dx = int(p2.operator()(0)) - x;
     dy = int(p2.operator()(1)) - y;
     e = abs(dx) + abs(dx) - abs(dy);
-    
+
     for (;y <= p2.operator()(1); y++){
         mImage->setValue(x, y, color);
         if (e > 0){
-            x--; 
+            x--;
             e -= dy + dy;
         }
         e += abs(dx) + abs(dx);
@@ -126,11 +126,11 @@ void WireframeRenderer::drawBresenham4(GLPoint p1, GLPoint p2, Color color){
     dx = int(p2.operator()(0)) - x;
     dy = int(p2.operator()(1)) - y;
     e = abs(dy) + abs(dy) - abs(dx);
-    
+
     for (;x >= p2.operator()(0); x--){
         mImage->setValue(x, y, color);
         if (e > 0){
-            y++; 
+            y++;
             e -= abs(dx) + abs(dx);
         }
         e += abs(dy) + abs(dy);
@@ -144,11 +144,11 @@ void WireframeRenderer::drawBresenham5(GLPoint p1, GLPoint p2, Color color){
     dx = int(p2.operator()(0)) - x;
     dy = int(p2.operator()(1)) - y;
     e = abs(dy) + abs(dy) - abs(dx);
-    
+
     for (; x >= p2.operator()(0); x--){
         mImage->setValue(x, y, color);
         if (e > 0){
-            y--; 
+            y--;
             e -= abs(dx) + abs(dx);
         }
         e += abs(dy) + abs(dy);
@@ -162,11 +162,11 @@ void WireframeRenderer::drawBresenham6(GLPoint p1, GLPoint p2, Color color){
     dx = int(p2.operator()(0)) - x;
     dy = int(p2.operator()(1)) - y;
     e = abs(dx) + abs(dx) - abs(dy);
-    
+
     for (; y >= p2.operator()(1); y--){
         mImage->setValue(x, y, color);
         if (e > 0){
-            x--; 
+            x--;
             e -= abs(dy) + abs(dy);
         }
         e += abs(dx) + abs(dx);
@@ -180,11 +180,11 @@ void WireframeRenderer::drawBresenham7(GLPoint p1, GLPoint p2, Color color){
     dx = int(p2.operator()(0)) - x;
     dy = int(p2.operator()(1)) - y;
     e = abs(dx) + abs(dx) - abs(dy);
-    
+
     for (; y >= p2.operator()(1); y--){
         mImage->setValue(x, y, color);
         if (e > 0){
-            x++; 
+            x++;
             e -= abs(dy) + abs(dy);
         }
         e += abs(dx) + abs(dx);
@@ -198,11 +198,11 @@ void WireframeRenderer::drawBresenham8(GLPoint p1, GLPoint p2, Color color){
     dx = abs(int(p2.operator()(0)) - x);
     dy = abs(int(p2.operator()(1)) - y);
     e = dy + dy - dx;
-    
+
     for (;x <= p2.operator()(0); x++){
         mImage->setValue(x, y, color);
         if (e > 0){
-            y--; 
+            y--;
             e -= dx + dx;
         }
         e += dy + dy;
@@ -212,10 +212,10 @@ void WireframeRenderer::drawBresenham8(GLPoint p1, GLPoint p2, Color color){
 /**
 ** Füllt einen vorgegebenen Bereich (abgegrenzt durch Randfarbe/borderColor) mit einer vorgegebenen Farbe (fillColor).
 ** Precondition: Das mImage muss gesetzt sein.
-** (Aufgabenblatt 1 - Aufgabe 3) 
+** (Aufgabenblatt 1 - Aufgabe 3)
 **/
 void WireframeRenderer::seedFillArea(GLPoint seed, Color borderColor, Color fillColor) {
-    int x = (int)seed.operator()(0); 
+    int x = (int)seed.operator()(0);
     int y = (int)seed.operator()(1);
     std::vector<int> trailx = {};
     std::vector<int> traily = {};
@@ -257,7 +257,7 @@ void WireframeRenderer::seedFillArea(GLPoint seed, Color borderColor, Color fill
             if (!trailx.empty()){
                 x = trailx.back();
                 y = traily.back();
-            } 
+            }
         }
     }
 }

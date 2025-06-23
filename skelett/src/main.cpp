@@ -33,16 +33,6 @@ int main(int argc, char **argv) {
     auto scene = std::make_shared<Scene>();
     scene->load(path_vector);
 
-    /* Aufgabenblatt 1: Instanziieren Sie einen WireframeRenderer */
-    auto wireRenderer = WireframeRenderer(scene, img);
-
-    /* Aufgabenblatt 1, Aufgabe 2: Testen Sie Ihre drawBresenhamLine-Methode hier */
-
-    /* Aufgabenblatt 1, Aufgabe 3: Testen Sie Ihre drawTriangle-Methode hier */
-
-    /* Aufgabenblatt 2: Testen Sie Ihre drawFilledTriangle-Methode hier */
-
-    /* Aufgabenblatt 2: Testen Sie Ihre renderScene-Methode hier (Wireframe) */
 
     // Hier Kamera Code einkommentieren und Parameter setzen (Aufgabenblatt 3)
     // Kameraposition: [0,0,200]
@@ -56,83 +46,96 @@ int main(int argc, char **argv) {
     cam->update();
     scene->setCamera(cam);
 
-    // Bunny Transformationen (Aufgabenblatt 3)
-    // Verschiebung um -10 Einheiten in y-Richtung und -30 Einheiten in z-Richtung
-    // Rotation um 170 Grad um y-Achse
-    Model& bunnyModel = scene->getModels()[0]; // Annahme: Bunny ist das erste geladene Modell
-    bunnyModel.setTranslation(GLVector(0, -10, -30));
-    bunnyModel.setRotation(GLVector(0, 170, 0));
-    // Bunny Materialfarbe: [0,1,0]
-    Material bunnyMaterial;
-    bunnyMaterial.color = Color(0.0, 1.0, 0.0);
-    /
+    Model &cube = scene->getModels()[1];
+    //cube kopien
+    Model cube_2 = cube;
+    Model cube_3 = cube;
+    Model cube_4 = cube;
 
+    scene->addModel(cube_2);
+    scene->addModel(cube_3);
+    scene->addModel(cube_4);
 
-    bunnyModel.mMaterial = bunnyMaterial;
+    /* Aufgabenblatt 3: Erzeugen Sie mindestens eine Kugel und fügen Sie diese zur Szene hinzu*/
+    Sphere sphere01;
+    scene->addSphere(sphere01);
+    Sphere sphere02;
+    scene->addSphere(sphere02);
 
-    Model& cube1 = scene->getModels()[1]; // Annahme: Cube ist das zweite geladene Modell
+    Sphere &sphere1 = scene->getSpheres()[0];
+    sphere1.setRadius(50);
+    sphere1.setPosition(GLPoint(-150, 0.0, -30));
+
+    Sphere &sphere2 = scene->getSpheres()[1];
+    sphere2.setRadius(50);
+    sphere2.setPosition(GLPoint(150, 0.0, -30));
+
+    /* Aufgabenblatt 3: (Wenn nötig) Transformationen der Modelle im World space, sodass sie von der Kamera gesehen werden könnnen. Die nötigen Transformationen für eine Darstellung entsprechend der Beispiellösung ist in der Aufgabenstellung gegeben. */
+    Model &cube1 = scene->getModels()[1];
     cube1.setTranslation(GLVector(-60, -50, 0));
-    Material matCube1;
-    matCube1.color = Color(0.9, 0.9, 0.3);
-    cube1.mMaterial = matCube1;
+    cube1.setScale(GLVector(1, 1, 1));
 
-
-    Model cube2 = scene->getModels()[1];
+    Model &cube2 = scene->getModels()[2];
     cube2.setTranslation(GLVector(60, 50, -50));
-    Material matCube2;
-    matCube2.color = Color(0.3, 0.9, 0.9);
-    cube2.mMaterial = matCube2;
-    scene->addModel(cube2);
+    cube2.setScale(GLVector(1, 1, 1));
 
-    // Cube 3: [-80, 10, -100], Material [0.9, 0.3, 0.9]
-    Model cube3 = scene->getModels()[1]; // Kopie
-    cube3.setTranslation(GLVector(-80, 10, -100));
-    Material matCube3;
-    matCube3.color = Color(0.9, 0.3, 0.9);
-    cube3.mMaterial = matCube3;
-    scene->addModel(cube3);
 
-    // Cube 4: [0, -100, 0], Skalierung [500, 0.01, 500], Material [0.5, 0.5, 0.5] (Boden)
-    Model cube4 = scene->getModels()[1]; // Kopie
+    Model &cube4 = scene->getModels()[4];
     cube4.setTranslation(GLVector(0, -100, 0));
     cube4.setScale(GLVector(500, 0.01, 500));
-    Material matCube4;
-    matCube4.color = Color(0.5, 0.5, 0.5);
-    cube4.mMaterial = matCube4;
-    scene->addModel(cube4);
+
+    Model &cube3 = scene->getModels()[3];
+    cube3.setTranslation(GLVector(-80, 10, -100));
+    cube3.setScale(GLVector(1, 1, 1));
 
 
-    // Spheres (Aufgabenblatt 3)
-    // Sphere 1: [150, 0, 30], Radius 50.0, Material [1.0, 0.0, 0.0] (bereits teilweise im Snippet)
-    Sphere sphere1;
-    sphere1.setPosition(GLPoint(150, 0, 30));
-    sphere1.setRadius(50.0);
-    Material redMaterial;
-    redMaterial.color = Color(1.0, 0.0, 0.0);
-    redMaterial.smooth = 0.5; // Diese Werte sind für Aufgabenblatt 4, aber hier schon gesetzt
-    redMaterial.reflection = 0.3;
-    redMaterial.refraction = 0.0;
-    redMaterial.transparency = 0.0;
-    sphere1.setMaterial(redMaterial);
-    scene->addSphere(sphere1);
+    Model &bunny = scene->getModels()[0];
+    bunny.setTranslation(GLVector(0, -10, -30));
+    bunny.setRotation(GLVector(0, 170,0));
+    bunny.setScale(GLVector(1, 1, 1));
 
-    // Sphere 2: [-150, 20, 0], Radius 30.0, Material [0.0, 0.0, 1.0]
-    Sphere sphere2;
-    sphere2.setPosition(GLPoint(-150, 20, 0));
-    sphere2.setRadius(30.0);
-    Material blueMaterial;
-    blueMaterial.color = Color(0.0, 0.0, 1.0);
-    blueMaterial.smooth = 0.5;
-    blueMaterial.reflection = 0.3;
-    blueMaterial.refraction = 0.0;
-    blueMaterial.transparency = 0.0;
-    sphere2.setMaterial(blueMaterial);
-    scene->addSphere(sphere2);
+    /* Stelle materialeigenschaften zur verfügung (Relevant für Aufgabenblatt 4)*/
+    Material cube1_material;
+    cube1_material.color = Color(0.9, 0.9, 0.3);
+
+    Material cube2_material;
+    cube2_material.color = Color(0.9, 0.4, 0.3);
+
+    Material cube3_material;
+    cube3_material.color = Color(1.0, 0, 0); // 0.1 von Aufgabenblatt stimmt nicht mit Zielbild
+
+    Material cube4_material;
+    cube4_material.color = Color(0.9, 0.9, 0.9);
+
+    Material materialsphere1 = Material();
+    Color blue_color(0, 0, 1);
+    materialsphere1.color = blue_color;
+
+    Material materialsphere2 = Material();
+    Color tourquis_color(0, 1, 1);
+    materialsphere2.color = tourquis_color;
+
+    Material materialbunny = Material();
+    Color green_color(0, 1, 0);
+    materialbunny.color = green_color;
+
+    materialbunny.reflection = 1;
+    materialsphere1.reflection = 1;
+    materialsphere2.reflection = 1;
+
+   bunny.setMaterial(materialbunny);
+    cube1.setMaterial(cube1_material);
+    cube2.setMaterial(cube2_material);
+    cube3.setMaterial(cube3_material);
+    cube4.setMaterial(cube4_material);
+    sphere1.setMaterial(materialsphere1);
+    sphere2.setMaterial(materialsphere2);
+
 
 
     /* Aufgabenblatt 3: erzeugen Sie einen SolidRenderer (vorzugsweise mir einem shared_ptr) und rufen sie die Funktion renderRaycast auf */
-    auto solidRenderer = std::make_shared<SolidRenderer>(scene, img, cam);
-    solidRenderer->renderRaycast();
+    SolidRenderer solidRenderer(scene, img, cam);
+    solidRenderer.renderRaycast();
 
     // Schreiben des Bildes in Datei
     if (argc > 1) {
