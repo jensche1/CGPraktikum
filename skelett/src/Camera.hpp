@@ -7,46 +7,46 @@
 #include "structs.hpp"
 
 class Camera {
-public:
-    Camera();
+ public:
+  Camera();
 
-    void setEyePoint(const GLPoint &pos);
+  void setEyePoint(const GLPoint &pos);
 
-    GLPoint getEyePoint() const;
+  GLPoint getEyePoint() const;
 
-    void setViewDirection(const GLVector &view);
+  void setViewDirection(const GLVector &view);
 
-    void setUp(const GLVector &up);
+  void setUp(const GLVector &up);
 
-    void makeOrtho();
+  void makeOrtho();
 
-    void setSize(size_t width, size_t height);
+  void setSize(size_t width, size_t height);
 
-    void update();
+  void update();
 
-    Ray getRay(int x, int y) const;
+  Ray getRay(int x, int y) const;
 
-    void print();
+  void print();
 
-    int getWidth() const;
+  int getWidth() const;
 
-    int getHeight() const;
+  int getHeight() const;
 
-    GLMatrix getViewMatrix() const;
+  GLMatrix getViewMatrix() const;
 
-    GLMatrix getInvViewMatrix() const;
+  GLMatrix getInvViewMatrix() const;
 
-private:
-    GLMatrix mViewTransform;
-    GLMatrix mProjectionTransform;
-    GLMatrix mWindowTransform;
+ private:
+  GLMatrix mViewTransform;
+  GLMatrix mProjectionTransform;  // orthographic
+  GLMatrix mWindowTransform;
 
-    GLMatrix mInvViewTransform;
+  GLMatrix mInvViewTransform;
 
-    GLMatrix mWorldToScreenTransform;
+  GLMatrix mWorldToScreenTransform;
 
-    GLMatrix mWindow;
+  GLMatrix mWindow;
 
-    int mWidth;
-    int mHeight;
+  int mWidth;
+  int mHeight;
 };

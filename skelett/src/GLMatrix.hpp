@@ -8,34 +8,34 @@
 #include "GLVector.hpp"
 
 class GLMatrix {
-public:
-    GLMatrix();
+ public:
+  GLMatrix();
 
-    void setColumn(int i, const GLPoint &rhs);
+  void setColumn(int i, const GLPoint &rhs);
 
-    void setColumn(int i, const GLVector &rhs);
+  void setColumn(int i, const GLVector &rhs);
 
-    void setValue(const int row, const int column, const double value);
+  void setValue(const int row, const int column, const float value);
 
-    GLVector getColumn(int i) const;
+  GLVector getColumn(int i) const;
 
-    bool inverse();
+  bool inverse();
 
-    double operator()(int row, int column) const;
+  double operator()(int row, int column) const;
 
-private:
-    double mMatrix[16];
+ private:
+  double mMatrix[16];
 };
 
 /**
 ** Gibt die Einträge der Matrix auf drei Nachkommastellen gerundet aus
 **/
 inline std::ostream &operator<<(std::ostream &os, const GLMatrix &m) {
-    for (size_t i = 0; i < 4; ++i) {
-        for (size_t j = 0; j < 4; ++j) {
-            os << round(m(i, j) * 1000.0f) / 1000.0f << " ";
-        }
-        os << "\n";
+  for (size_t i = 0; i < 4; ++i) {
+    for (size_t j = 0; j < 4; ++j) {
+      os << round(m(i, j) * 1000.0f) / 1000.0f << " ";
     }
-    return os;
+    os << "\n";
+  }
+  return os;
 }

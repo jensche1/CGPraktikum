@@ -63,8 +63,8 @@ Ray Camera::getRay(int x, int y) const {
        mViewTransform.getColumn(0) * (2.0 * (x - mWidth / 2) / (double)mWidth) +
        mViewTransform.getColumn(1) *
            (2.0 * (y - mHeight / 2) / (double)mHeight));
-
-  // Antialiasing für Ray casting / tracing. Zur Nutzung einkommentieren.
+  
+  // Antialiasing für Ray casting / tracing. Zur Nutzung einkommentieren. 
   // r.direction = r.direction + mViewTransform.getColumn( 0 ) * jitterx + mViewTransform.getColumn( 1 ) * jittery;
 
   r.direction(0) *= aspectRatio;

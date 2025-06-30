@@ -13,17 +13,8 @@ class WireframeRenderer {
       : mImage(image), mScene(scene) {}
 
   void renderScene(Color color);
-
   void drawBresenhamLine(GLPoint p1, GLPoint p2, Color color);
   void seedFillArea(GLPoint seed, Color borderColor, Color fillColor);
-  void drawBresenham1(GLPoint p1, GLPoint p2, Color color);
-  void drawBresenham2(GLPoint p1, GLPoint p2, Color color);
-  void drawBresenham3(GLPoint p1, GLPoint p2, Color color);
-  void drawBresenham4(GLPoint p1, GLPoint p2, Color color);
-  void drawBresenham5(GLPoint p1, GLPoint p2, Color color);
-  void drawBresenham6(GLPoint p1, GLPoint p2, Color color);
-  void drawBresenham7(GLPoint p1, GLPoint p2, Color color);
-  void drawBresenham8(GLPoint p1, GLPoint p2, Color color);
 
   std::shared_ptr<Image> mImage;
   std::shared_ptr<Scene> mScene;

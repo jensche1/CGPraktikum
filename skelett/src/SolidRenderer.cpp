@@ -1,80 +1,155 @@
-// SolidRenderer.cpp Implementierung
-
+// SolidRenderer.cpp
 #include "SolidRenderer.hpp"
-#include <iostream>
+#include <algorithm> // For std::max
+#include <cmath>     // For std::pow
 
-//#include <tbb/tbb.h>  // Include, nur wenn TBB genutzt werden soll
-
-#define EPSILON \
-  (1e-12)  // Epsilon um ungenauigkeiten und Rundungsfehler zu kompensieren
+#define EPSILON (1e-12) // Epsilon um ungenauigkeiten und Rundungsfehler zu kompensieren
 
 /**
  ** Erstellt mittels Raycast das Rendering der mScene in das mImage
  ** Precondition: Sowohl mImage, mScene, mCamera müssen gesetzt sein.
  **/
-
 void SolidRenderer::renderRaycast() {
-    if (!mImage || !mScene || !mCamera) {
-        std::cerr << "Fehler: mImage, mScene oder mCamera ist nicht gesetzt." << std::endl;
-        return;
-    }
-
-    
     std::cout << "Rendern mittels Raycast gestartet." << std::endl;
 
     #pragma omp parallel for
-    for(size_t i = 0; i < mImage->getHeight(); ++i ) {
+    for (size_t i = 0; i < mImage->getHeight(); ++i) {
         computeImageRow(i);
     }
-
-    std::cout << "Rendern mittels Raycast abgeschlossen." << std::endl;
 }
-
 
 /**
  * Aufgabenblatt 3: Hier wird das Raycasting implementiert. Siehe Aufgabenstellung!
- * Precondition: Sowohl mImage, mScene und mCamera  müssen gesetzt sein.
+ * Precondition: Sowohl mImage, mScene und mCamera müssen gesetzt sein.
  */
 void SolidRenderer::computeImageRow(size_t rowNumber) {
-    if(!mImage || !mScene || !mCamera) {
-        std::cerr << "Fehler: mImage, mScene oder mCamera ist nicht gesetzt." << std::endl;
-        return;
-    }
+    for (size_t spalte = 0; spalte < mImage->getWidth(); ++spalte) {
+        Ray ray = mCamera->getRay(spalte, rowNumber); // Strahl für Pixel
 
-    for (size_t x = 0; x < mImage->getWidth(); ++x) {
-        Ray ray = mCamera->getRay(x, rowNumber);
         HitRecord hitRecord;
-        hitRecord.recursions = 0; // Für Aufgabenblatt 4 wichtig, hier initial 0
+        // Initialize hitRecord.parameter to infinity to find the closest hit
+        hitRecord.parameter = std::numeric_limits<double>::infinity();
+        hitRecord.modelId = -1;
+        hitRecord.sphereId = -1;
 
-        hitRecord.parameter = std::numeric_limits<double>::max();
-
-        // Überprüfen, ob der Strahl ein Objekt in der Szene trifft
         if (mScene->intersect(ray, hitRecord, EPSILON)) {
-            // Wenn ein Treffer vorliegt, schattiere das Pixel mit der Materialfarbe des Objekts
-            // Für Aufgabenblatt 3 reicht es, die Farbe des getroffenen Objekts zu verwenden.
-            // Die `shade` Funktion kann für Aufgabenblatt 4 erweitert werden.
+            // Object hit, now shade the point
             shade(hitRecord);
-            mImage->setValue(x, rowNumber, hitRecord.color);
+            mImage->setValue(spalte, rowNumber, hitRecord.color);
         } else {
-            // Wenn kein Treffer vorliegt, setze das Pixel auf die Hintergrundfarbe (weiß)
-            mImage->setValue(x, rowNumber, Color(1.0, 1.0, 1.0)); // Weiß als Hintergrundfarbe
+            // No object hit, set background color (e.g., black)
+            mImage->setValue(spalte, rowNumber, Color(0.0, 0.0, 0.0));
         }
     }
 }
 
 /**
- * Aufgabenblatt 4: Hier wird das raytracing implementiert. Siehe Aufgabenstellung!
- * Für Aufgabenblatt 3 wird diese Funktion nur dazu verwendet, die Farbe des Materials zu setzen.
+ * Aufgabenblatt 3: Hier wird das Raytracing/Shading implementiert. Siehe Aufgabenstellung!
  */
 void SolidRenderer::shade(HitRecord &r) {
-    // Für Aufgabenblatt 3 reicht es, die Materialfarbe des getroffenen Objekts zu verwenden.
-    // Die Farbinformation sollte bereits im HitRecord vorhanden sein, nachdem Scene::intersect aufgerufen wurde.
-    // r.color ist bereits in Scene::intersect auf die Materialfarbe des getroffenen Objekts gesetzt worden.
-    // Daher ist hier für Aufgabe 3 keine weitere Berechnung notwendig.
-    if(r.modelId > -1) {
-        r.color = mScene->getModels()[r.modelId].getMaterial().color;
+    // --- Beleuchtungsparameter (gemäß Aufgabenblatt) ---
+    const float k_ambient = 0.4f;
+    const float k_diffuse = 0.4f;
+    const float k_specular = 0.2f;
+    const float n = 20.0f; // Glanzlicht-Exponent
+    const Color light_intensity = Color(1.0, 1.0, 1.0); // Weißes Licht
+
+    // Materialfarbe
+    Color material_color;
+    float reflection = 0.0f;
+
+    if (r.modelId != -1) {
+        const auto &mat = mScene->getModels()[r.modelId].getMaterial();
+        material_color = mat.color;
+        reflection = mat.reflection;
+    } else if (r.sphereId != -1) {
+        const auto &mat = mScene->getSpheres()[r.sphereId].getMaterial();
+        material_color = mat.color;
+        reflection = mat.reflection;
+    } else {
+        material_color = r.color; // Fallback
     }
-    if(r.sphereId > -1) {
-        r.color = mScene->getSpheres()[r.sphereId].getMaterial().color;
+
+    // Startfarbe: Ambient-Anteil
+    Color final_color = k_ambient * material_color * light_intensity;
+
+    // Jede Lichtquelle verarbeiten
+    for (const auto &light_position : mScene->getPointLights()) {
+        GLVector L_unnormalized = light_position - r.intersectionPoint;
+        double light_distance = L_unnormalized.norm();
+        GLVector L = L_unnormalized;
+        L.normalize();
+
+        GLVector N = r.normal;
+        N.normalize();
+
+        // Schattenstrahl vorbereiten
+        Ray shadow_ray;
+        shadow_ray.origin = r.intersectionPoint + N * EPSILON;
+        shadow_ray.direction = L;
+
+        HitRecord shadow_hit;
+        shadow_hit.parameter = light_distance;
+        shadow_hit.modelId = -1;
+        shadow_hit.sphereId = -1;
+
+        bool is_shadowed = false;
+        if (mScene->intersect(shadow_ray, shadow_hit, EPSILON)) {
+            if (shadow_hit.parameter < light_distance) {
+                is_shadowed = true;
+            }
+        }
+
+        if (!is_shadowed) {
+            // Diffusanteil (Lambert)
+            double diffuse_factor = std::max(0.0, dotProduct(L, N));
+            final_color += k_diffuse * material_color * light_intensity * diffuse_factor;
+
+            // Spekularanteil (Phong)
+            GLVector V = mCamera->getEyePoint() - r.intersectionPoint;
+            V.normalize();
+            GLVector R = 2.0 * dotProduct(L, N) * N - L;
+            R.normalize();
+
+            double specular_factor = std::pow(std::max(0.0, dotProduct(R, V)), n);
+            final_color += k_specular * light_intensity * specular_factor;
+        }
+        // Optional: bei Schatten könnte man final_color *= 0.5; laut Aufgabenblatt
     }
+
+    // --- Reflexion (Aufgabe 4) ---
+    if (reflection > 0.0f) {
+        const int maxRecursions = 2;
+        if (r.recursions < maxRecursions) {
+            GLVector N = r.normal;
+            N.normalize();
+            GLVector D = r.rayDirection;
+            D.normalize();
+
+            GLVector R = D - 2.0 * dotProduct(D, N) * N;
+            R.normalize();
+
+            Ray reflection_ray;
+            reflection_ray.origin = r.intersectionPoint + N * EPSILON;
+            reflection_ray.direction = R;
+
+            HitRecord reflected_hit;
+            reflected_hit.parameter = std::numeric_limits<double>::infinity();
+            reflected_hit.modelId = -1;
+            reflected_hit.sphereId = -1;
+            reflected_hit.recursions = r.recursions + 1;
+
+            if (mScene->intersect(reflection_ray, reflected_hit, EPSILON)) {
+                shade(reflected_hit);
+                r.color = reflected_hit.color;
+                return;
+            } else {
+                r.color = Color(0.0, 0.0, 0.0); // Hintergrund
+                return;
+            }
+        }
+    }
+
+    // Wenn keine Reflexion oder maximale Tiefe erreicht
+    r.color = final_color;
 }

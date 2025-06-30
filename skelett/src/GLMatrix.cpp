@@ -1,3 +1,4 @@
+
 #include "GLMatrix.hpp"
 
 GLMatrix::GLMatrix() {
@@ -26,7 +27,7 @@ void GLMatrix::setColumn(int i, const GLVector &rhs) {
   }
 }
 
-void GLMatrix::setValue(const int row, const int column, const double value) {
+void GLMatrix::setValue(const int row, const int column, const float value) {
   mMatrix[row * 4 + column] = value;
 }
 
