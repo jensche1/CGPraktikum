@@ -9,11 +9,25 @@ struct Material {
         reflection(0.0),
         refraction(0.0),
         transparency(0.0),
-        color(Color(0, 0, 0)) {}
+        color(Color(0, 0, 0)),
+    // Cora 4.2
+        ambient(0.1, 0.1, 0.1),     // Umgebungslicht-Anteil
+        diffuse(0.9, 0.9, 0.9),     // Diffuser Anteil
+        specular(0.3, 0.3, 0.3),        // Spiegelnder Anteil
+        shininess(20.0f)            // Glanz-Exponent (alpha)
+    // Cora 4.2
+{}
 
   bool smooth;
   float reflection;
   float refraction;
   float transparency;
   Color color;
+
+    // Cora 4.2
+    Color ambient   = Color(0.1, 0.1, 0.1);
+    Color diffuse   = Color(0.9, 0.9, 0.9);
+    Color specular  = Color(0.3, 0.3, 0.3);
+    float shininess = 20.0f;
+    // Cora 4.2
 };

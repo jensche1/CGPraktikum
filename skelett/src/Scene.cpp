@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <iostream>
 #include <vector>
-#include <limits> /
+#include <limits>
 
 Scene::Scene() {
 }
@@ -120,53 +120,71 @@ bool Scene::intersect(const Ray &ray, HitRecord &hitRecord,
  * Diese Methode sollte in Scene::intersect für jedes Objektdreieck aufgerufen werden
  * Aufgabenblatt 4: Diese Methode befüllt den den HitRecord im Fall eines Treffers mit allen für das shading notwendigen informationen
  */
-bool Scene::triangleIntersect(const Ray &ray,  const Triangle &triangle,            //Fehlersuche: Ray hat hier gefehlt, ursache?
+//Cora4.2
+bool Scene::triangleIntersect(const Ray &ray, const Triangle &triangle,
                               HitRecord &hitRecord, const float epsilon) {
 
     GLPoint p1 = triangle.vertex[0];
     GLPoint p2 = triangle.vertex[1];
     GLPoint p3 = triangle.vertex[2];
 
-
-
     GLVector n = crossProduct(p2 - p1, p3 - p1);
 
-
-    // Wenn die Determinante nahe Null ist, ist der Strahl parallel zur Ebene des Dreiecks
-    if (dotProduct (n, ray.direction) < epsilon && dotProduct( n, ray.direction) > (-1 * epsilon)){
+    // Prüfe, ob der Strahl parallel zur Dreiecksebene ist
+    double n_dot_raydir = dotProduct(n, ray.direction);
+    if (std::abs(n_dot_raydir) < epsilon) {
         return false;
     }
 
-    double t = dotProduct(p1 - ray.origin, n) / dotProduct(ray.direction, n);
+    // Berechne die Distanz t zum Schnittpunkt
+    double t = dotProduct(p1 - ray.origin, n) / n_dot_raydir;
 
-    //culling hier
-    if (hitRecord.parameter < t || t < epsilon) {
+    // Liegt der Schnittpunkt hinter dem Strahl oder ist er weiter weg als der bisher nächste?
+    if (t < epsilon || t >= hitRecord.parameter) {
         return false;
     }
 
-
+    // Berechne den Schnittpunkt
     GLPoint p = ray.origin + t * ray.direction;
 
+    // Schutz vor Division durch Null bei degenerierten Dreiecken (Fläche = 0)
     double flaecheABC = dotProduct(n, n);
-
-    double alpha = dotProduct(crossProduct(p2 - p, p3 - p), n) / flaecheABC;
-    if (alpha < 0 || alpha > 1) {
+    if (flaecheABC < epsilon) {
         return false;
     }
 
-    double beta = dotProduct(crossProduct(p - p1, p3 - p1), n) / flaecheABC;
-    if (beta < 0 || beta > 1) {
+    // Baryzentrische Koordinaten berechnen, um zu prüfen, ob der Punkt im Dreieck liegt
+    // (Diese Methode ist numerisch stabiler)
+    GLVector edge1 = p2 - p1;
+    GLVector edge2 = p3 - p1;
+    GLVector p_vec = p - p1;
+
+    double d00 = dotProduct(edge1, edge1);
+    double d01 = dotProduct(edge1, edge2);
+    double d11 = dotProduct(edge2, edge2);
+    double d20 = dotProduct(p_vec, edge1);
+    double d21 = dotProduct(p_vec, edge2);
+
+    double denom = d00 * d11 - d01 * d01;
+    if (std::abs(denom) < epsilon) { // Schutz vor Division durch Null
         return false;
     }
-    double gamma = 1 - alpha - beta;
-    if (gamma < 0) {
+
+    double beta = (d11 * d20 - d01 * d21) / denom;
+    double gamma = (d00 * d21 - d01 * d20) / denom;
+
+    if (beta < 0.0 || gamma < 0.0 || (beta + gamma) > 1.0) {
         return false;
     }
 
-
-
+    // Ein gültiger Treffer wurde gefunden!
     hitRecord.parameter = t;
     hitRecord.intersectionPoint = p;
+
+    // Normale für die Beleuchtung normalisieren und speichern
+    n.normalize();
+    hitRecord.normal = n;
+
     return true;
 }
 
@@ -198,6 +216,12 @@ bool Scene::sphereIntersect(const Ray &ray, const Sphere &sphere,
         if(t > epsilon) {
             hitRecord.parameter = t;
             hitRecord.intersectionPoint = ray.origin + t * ray.direction;
+            // Cora 4.2
+            GLVector normal = hitRecord.intersectionPoint - sphere.getPosition();
+            normal.normalize();
+            hitRecord.normal = normal;
+            // Cora 4.2
+
             return true;
         }
     }
@@ -208,6 +232,11 @@ bool Scene::sphereIntersect(const Ray &ray, const Sphere &sphere,
         if(t > epsilon) {
             hitRecord.parameter = t;
             hitRecord.intersectionPoint = ray.origin + t * ray.direction;
+            // Cora 4.2
+            GLVector normal = hitRecord.intersectionPoint - sphere.getPosition();
+            normal.normalize();
+            hitRecord.normal = normal;
+            // Cora 4.2
             return true;
         }
     }
