@@ -89,6 +89,7 @@ bool Scene::intersect(const Ray &ray, HitRecord &hitRecord,
     GLVector normal;
 
     for (size_t i = 0; i < getModels().size() ; i++) { // i= 0 ist bunny
+        int j = 0;
         for (Triangle triangle : getModels()[i].mTriangles) {             //  Fehlersuche: hier war ein Fehler im Aufruf der Triangles
             GLMatrix transformation = getModels()[i].getTransformation();
             GLPoint p_1 = transformation*triangle.vertex[0];
@@ -100,15 +101,20 @@ bool Scene::intersect(const Ray &ray, HitRecord &hitRecord,
             transformiertes_triangle.vertex[2] =p_3;
             if (triangleIntersect(ray,transformiertes_triangle,hitRecord,epsilon)) {
                 hitRecord.modelId = i;
+                hitRecord.triangleId = j;
+                hitRecord.sphereId=-1;
                 //hitRecord.color = getModels()[i].getMaterial().color;
                 hit_Anything = true;
             }
+            j++;
         }
     }
 
     for (size_t i = 0; i < getSpheres().size(); i++) {
         if (sphereIntersect(ray, getSpheres()[i], hitRecord, epsilon)) {
             hitRecord.sphereId = i;
+            hitRecord.modelId = -1;
+            hitRecord.triangleId = -1;
             //hitRecord.color = getSpheres()[i].getMaterial().color;
             hit_Anything = true;
         }
@@ -120,7 +126,7 @@ bool Scene::intersect(const Ray &ray, HitRecord &hitRecord,
  * Diese Methode sollte in Scene::intersect für jedes Objektdreieck aufgerufen werden
  * Aufgabenblatt 4: Diese Methode befüllt den den HitRecord im Fall eines Treffers mit allen für das shading notwendigen informationen
  */
-//Cora4.2
+//4.2
 bool Scene::triangleIntersect(const Ray &ray, const Triangle &triangle,
                               HitRecord &hitRecord, const float epsilon) {
 
@@ -216,11 +222,11 @@ bool Scene::sphereIntersect(const Ray &ray, const Sphere &sphere,
         if(t > epsilon) {
             hitRecord.parameter = t;
             hitRecord.intersectionPoint = ray.origin + t * ray.direction;
-            // Cora 4.2
+            //  4.2
             GLVector normal = hitRecord.intersectionPoint - sphere.getPosition();
             normal.normalize();
             hitRecord.normal = normal;
-            // Cora 4.2
+            //  4.2
 
             return true;
         }
@@ -232,11 +238,11 @@ bool Scene::sphereIntersect(const Ray &ray, const Sphere &sphere,
         if(t > epsilon) {
             hitRecord.parameter = t;
             hitRecord.intersectionPoint = ray.origin + t * ray.direction;
-            // Cora 4.2
+            //  4.2
             GLVector normal = hitRecord.intersectionPoint - sphere.getPosition();
             normal.normalize();
             hitRecord.normal = normal;
-            // Cora 4.2
+            // 4.2
             return true;
         }
     }

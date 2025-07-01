@@ -34,10 +34,10 @@ void SolidRenderer::computeImageRow(size_t rowNumber) {
         Ray ray = mCamera->getRay(spalte, rowNumber);
         HitRecord hit;
 
-        // Cora 4.4
+        //  4.4
         hit.recursions = 0; // Der erste Strahl hat Rekursionstiefe 0
         hit.rayDirection = ray.direction; // Die Richtung des aktuellen Strahls speichern
-        // Cora 4.4
+        //  4.4
 
         hit.color = Color (0,0,0);
 		hit.parameter = std::numeric_limits<float>::infinity();
@@ -59,10 +59,23 @@ void SolidRenderer::computeImageRow(size_t rowNumber) {
  * Aufgabenblatt 4: Hier wird das raytracing implementiert. Siehe Aufgabenstellung!
  * Für Aufgabenblatt 3 wird diese Funktion nur dazu verwendet, die Farbe des Materials zu setzen.
  */
-//Cora 4.2&3
+// 4.2&3
 
 
 void SolidRenderer::shade(HitRecord &r) {
+    // =======================================================================
+    // ===== DAS IST DIE LÖSUNG FÜR DEN ABSTURZ ==============================
+    // =======================================================================
+    const int MAX_RECURSIONS = 5; // Maximale Spiegeltiefe
+
+    // Wenn die maximale Tiefe erreicht ist, stoppen und Schwarz zurückgeben.
+    if (r.recursions >= MAX_RECURSIONS) {
+        r.color = Color(0, 0, 0);
+        return; // GANZ WICHTIG!
+    }
+    // =======================================================================
+
+
     // Ein sehr kleiner Wert, um Selbst-Schnitt zu vermeiden
     const float SHADOW_EPSILON = 1e-4;
 
@@ -72,10 +85,12 @@ void SolidRenderer::shade(HitRecord &r) {
         material = mScene->getModels()[r.modelId].getMaterial();
     } else if (r.sphereId != -1) {
         material = mScene->getSpheres()[r.sphereId].getMaterial();
+std::cout << mScene->getSpheres()[r.sphereId].getMaterial().reflection << " ist die Reflexion"  << std::endl;
     } else {
         r.color = Color(0,0,0);
         return;
     }
+
 
     // Vektoren für die Beleuchtung vorbereiten
     GLPoint intersectionPoint = r.intersectionPoint;
@@ -90,7 +105,7 @@ void SolidRenderer::shade(HitRecord &r) {
     }
 
 
-    // Cora 4.4
+    //  4.4
 
     // Fall 1: Das Material ist reflektierend
     if (material.reflection > 0.0) {
@@ -122,7 +137,7 @@ void SolidRenderer::shade(HitRecord &r) {
         return; // Für perfekt spiegelnde Objekte sind wir hier fertig.
     }
 
-    // Cora 4.4
+    // 4.4
 
     // Fall 2: Das Material ist NICHT reflektierend (Code aus Aufgabe 2 & 3)
     // Ambiente Komponente ist immer vorhanden, auch im Schatten

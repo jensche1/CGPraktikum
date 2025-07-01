@@ -21,7 +21,7 @@ class Color {
   float r, g, b;
 };
 
-// Cora 4.2
+// 4.2
 
 // Definiert, wie eine Farbe mit einer Zahl multipliziert wird (z.B. Color(1,0,0) * 0.5)
 inline Color operator*(const Color& c, double s) {
@@ -33,4 +33,4 @@ inline Color operator*(double s, const Color& c) {
     return c * s;
 }
 
-// Cora 4.2
+// 4.2
